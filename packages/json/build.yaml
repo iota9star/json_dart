@@ -1,0 +1,9 @@
+# Read about `build.yaml` at https://pub.dev/packages/build_config
+builders:
+  json:
+    import: "package:json/builder.dart"
+    builder_factories: [ "json" ]
+    build_extensions: { ".json": [ ".json.dart" ] }
+    build_to: source
+    auto_apply: root_package
+    runs_before: [ "freezed", "json_serializable" ]

@@ -1,0 +1,29 @@
+name: json_dart
+
+packages:
+  - packages/**
+
+command:
+  bootstrap:
+    usePubspecOverrides: true
+    runPubGetInParallel: true
+    runPubGetOffline: false
+
+  version:
+    branch: main
+    linkToCommits: false
+    includeCommitId: true
+    includeScopes: true
+    workspaceChangelog: true
+    updateGitTagRefs: true
+    releaseUrl: false
+
+scripts:
+  upgrade: melos exec -- dart pub upgrade --null-safety
+  analyze:
+    exec: dart analyze .
+
+ide:
+  intellij:
+    enabled: true
+    moduleNamePrefix: ''
