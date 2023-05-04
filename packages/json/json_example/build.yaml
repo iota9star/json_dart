@@ -1,0 +1,7 @@
+targets:
+  $default:
+    builders:
+      json:
+        options:
+#          template_path: ../../core/test/test.mustache
+          use_template: no_final
