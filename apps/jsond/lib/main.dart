@@ -24,6 +24,16 @@ import 'widget/ripple_tap.dart';
 
 part 'main.g.dart';
 
+const _defaultJson =
+// language=json
+    '''
+{
+  "hint": "Please enter your JSON in this field."
+}
+''';
+
+MediaQueryData get mediaQuery => MediaQueryData.fromWindow(window);
+
 Map<String, TextStyle> lightCodeTheme(Color backgroundColor) {
   final map = Map<String, TextStyle>.from(tomorrowTheme);
   map['root'] = TextStyle(
@@ -115,7 +125,6 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
   void initState() {
     windowManager.addListener(this);
     super.initState();
-    _codeController = CodeController(language: json);
   }
 
   @override
@@ -127,10 +136,9 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
 
   @override
   void onWindowResize() {
-    final md = MediaQueryData.fromWindow(window);
     final value = _jsonContentWidth.value;
-    if (md.size.width - value - 240.0 < 20.0) {
-      _jsonContentWidth.value = md.size.width - 240.0 - 20.0;
+    if (mediaQuery.size.width - value - 240.0 < 20.0) {
+      _jsonContentWidth.value = mediaQuery.size.width - 240.0 - 20.0;
     }
   }
 
@@ -168,18 +176,18 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
   final _codes = ValueNotifier<List<String>>([]);
   final _jsonContentWidth = ValueNotifier(300.0);
   late final _selected = ValueNotifier(_builtInTemplates.first);
-  late CodeController _codeController;
+  late final _codeController =
+      CodeController(language: json, text: _defaultJson);
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final md = MediaQuery.of(context);
     return Scaffold(
       body: Row(
         children: [
           _buildTemplatePanel(theme),
-          _buildJsonPanel(theme, md),
-          _buildDragBar(md),
+          _buildJsonPanel(theme),
+          _buildDragBar(),
           _buildCodePanel(theme),
         ],
       ),
@@ -217,7 +225,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
     );
   }
 
-  Widget _buildDragBar(MediaQueryData md) {
+  Widget _buildDragBar() {
     return MouseRegion(
       cursor: SystemMouseCursors.resizeColumn,
       child: GestureDetector(
@@ -228,7 +236,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
             return;
           }
           final newValue = oldWidth + d.delta.dx;
-          if (md.size.width - newValue - 240.0 < 20.0) {
+          if (mediaQuery.size.width - newValue - 240.0 < 20.0) {
             return;
           }
           _jsonContentWidth.value = newValue;
@@ -277,6 +285,20 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
               valueListenable: _codes,
               builder: (context, codes, child) {
                 final length = codes.length;
+                if (length == 1) {
+                  return SizedBox.expand(
+                    child: HighlightView(
+                      codes.first,
+                      language: 'dart',
+                      textStyle: const TextStyle(
+                        fontFamily: FontFamily.agave,
+                        height: 1.5,
+                      ),
+                      theme: getCodeTheme(theme),
+                      padding: const EdgeInsets.all(24.0),
+                    ),
+                  );
+                }
                 return ListView.builder(
                   itemBuilder: (context, index) {
                     return HighlightView(
@@ -314,7 +336,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
     );
   }
 
-  Widget _buildJsonPanel(ThemeData theme, MediaQueryData md) {
+  Widget _buildJsonPanel(ThemeData theme) {
     return ValueListenableBuilder(
       valueListenable: _jsonContentWidth,
       builder: (context, width, child) {
@@ -342,7 +364,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
               PositionedDirectional(
                 start: 24.0,
                 end: 24.0,
-                bottom: 24.0 + md.padding.bottom,
+                bottom: 24.0 + mediaQuery.padding.bottom,
                 child: Wrap(
                   spacing: 8.0,
                   runSpacing: 8.0,
@@ -513,6 +535,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                           ),
                         ],
                       ),
+                      const SliverToBoxAdapter(child: SizedBox(height: 8.0)),
                       ValueListenableBuilder(
                         valueListenable: Hives.templateBox.listenable(),
                         builder: (context, box, child) {
@@ -928,11 +951,21 @@ class _TempEditorState extends State<TempEditor> {
       '{{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }}',
     ),
     MapEntry('ObjFields', '{{# obj_fields }}{{/ obj_fields }}'),
+    MapEntry('ObjFieldsLength', '{{ obj_fields_length }}'),
     MapEntry('Field', '{{ field_key }}'),
+    MapEntry('FieldIndex', '{{ field_index }}'),
+    MapEntry('field_is_last', '{{# field_is_last }}{{/ field_is_last }}'),
     MapEntry(
       'CamelCaseField',
       '{{# @camel_case }}{{ field_key }}{{/ @camel_case }}',
     ),
+    MapEntry('FieldType', '{{ field_type }}'),
+    MapEntry('FieldTypeName', '{{ field_type_name }}'),
+    MapEntry('FieldDeser', '{{ field_deser }}'),
+    MapEntry('FieldIsObject', '{{# field_is_object }}{{/ field_is_object }}'),
+    MapEntry('FieldIsArray', '{{# field_is_array }}{{/ field_is_array }}'),
+    MapEntry('FieldIsPrimitive',
+        '{{# field_is_primitive }}{{/ field_is_primitive }}'),
     MapEntry(
       'FieldIsDynamic',
       '{{# field_is_dynamic }}{{/ field_is_dynamic }}',
@@ -1204,9 +1237,7 @@ class Template extends HiveObject {
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is Template &&
-          runtimeType == other.runtimeType &&
-          id == other.id;
+      other is Template && runtimeType == other.runtimeType && id == other.id;
 
   @override
   // ignore: avoid_equals_and_hash_code_on_mutable_classes

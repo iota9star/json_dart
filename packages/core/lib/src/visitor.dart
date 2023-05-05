@@ -167,7 +167,14 @@ class Def {
     return {
       'obj_path': key.path,
       'obj_name': key.name,
-      'obj_fields': fields.map((e) => e.toJson()).toList(growable: false),
+      'obj_fields_length': fields.length,
+      'obj_fields': fields
+          .mapIndexed(
+            (index, e) => e.toJson()
+              ..['field_index'] = index
+              ..['field_is_last'] = index == fields.length - 1,
+          )
+          .toList(growable: false),
     };
   }
 }
