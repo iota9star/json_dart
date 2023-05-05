@@ -4,10 +4,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-defaults:
-  run:
-    working-directory: apps/jsond
-
 on:
   workflow_dispatch:
   push:
@@ -23,12 +19,16 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
       - name: Setup flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
       - name: Build Web
         run: |
+          cd apps/jsond
           flutter build web --release --web-renderer canvaskit
       - name: Deploy
         uses: amondnet/vercel-action@v25
@@ -37,4 +37,4 @@ jobs:
           vercel-args: --prod
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID}}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID}}
-          working-directory: build/web
+          working-directory: apps/jsond/build/web

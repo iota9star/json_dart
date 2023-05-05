@@ -10,7 +10,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  json_core: ^0.1.0
+  json_core:
+    path: ../../packages/core
   highlight: ^0.7.0
   flutter_highlight: ^0.7.0
   sliver_tools: ^0.2.10
