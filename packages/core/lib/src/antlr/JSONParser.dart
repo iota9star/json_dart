@@ -1,4 +1,4 @@
-// Generated from JSON.g4 by ANTLR 4.11.1
+// Generated from JSON.g4 by ANTLR 4.12.0
 // ignore_for_file: unused_import, unused_local_variable, prefer_single_quotes
 import 'package:antlr4/antlr4.dart';
 
@@ -8,7 +8,7 @@ const int RULE_json = 0, RULE_object = 1, RULE_pair = 2, RULE_array = 3,
           RULE_value = 4, RULE_string = 5, RULE_number = 6, RULE_bool = 7, 
           RULE_null = 8;
 class JSONParser extends Parser {
-  static final checkVersion = () => RuntimeMetaData.checkVersion('4.11.1', RuntimeMetaData.VERSION);
+  static final checkVersion = () => RuntimeMetaData.checkVersion('4.12.0', RuntimeMetaData.VERSION);
   static const int TOKEN_EOF = IntStream.EOF;
 
   static final List<DFA> _decisionToDFA = List.generate(

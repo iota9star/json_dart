@@ -9,8 +9,8 @@ environment:
 dependencies:
   antlr4: ^4.12.0
   recase: ^4.1.0
-  collection: ^1.17.1
-  meta: ^1.9.1
+  collection: ^1.17.0
+  meta: ^1.8.0
   mustache_template: ^2.0.0
   code_builder: ^4.4.0
   dart_style: ^2.3.1
