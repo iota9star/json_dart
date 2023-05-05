@@ -2,6 +2,7 @@ name: json_dart
 
 packages:
   - packages/**
+  - apps/**
 
 command:
   bootstrap:

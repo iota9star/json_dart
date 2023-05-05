@@ -1,0 +1,127 @@
+name: Build Apps
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: apps/jsond
+
+on:
+  workflow_dispatch:
+    inputs:
+      TAG:
+        description: 'Set a Tag'
+        required: true
+        default: ''
+  push:
+    tags:
+      - v*
+jobs:
+  build-apks-and-linux-app:
+    name: Release Apks/LinuxApp
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: '11.x'
+      - name: Setup flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Build apks
+        run: |
+          \cp -f pubspec.yaml assets/
+          flutter pub get
+          flutter build apk --release
+          flutter build apk --target-platform android-arm,android-arm64,android-x64 --split-per-abi --release
+          mkdir -p releases
+          mv -f build/app/outputs/flutter-apk/*-release.apk releases
+          mv -f releases/app-release.apk releases/app-universal-release.apk
+      - name: Build linux app
+        run: |
+          sudo apt-get install bash curl file unzip xz-utils zip libglu1-mesa clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev -y
+          flutter pub get
+          flutter config --enable-linux-desktop
+          flutter build linux --release
+          cd build/linux/x64/release/bundle
+          zip -r jsond-linux.zip ./
+          mv jsond-linux.zip ../../../../../
+      - name: Release to github
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          artifacts: "releases/*-release.apk,jsond-linux.zip"
+          token: ${{ secrets.ACTION_TOKEN }}
+          tag: ${{ github.event.inputs.TAG }}
+
+  build-windows-app:
+    name: Release Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Build windows
+        run: |
+          Copy-Item -Path pubspec.yaml -Destination assets -Force
+          flutter pub get
+          flutter config --enable-windows-desktop
+          flutter build windows --release --no-tree-shake-icons
+          Compress-Archive -Path build/windows/runner/Release/* jsond-win32.zip -Force
+      - name: Release build
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          artifacts: "jsond-win32.zip"
+          token: ${{ secrets.ACTION_TOKEN }}
+          tag: ${{ github.event.inputs.TAG }}
+
+  build-macos-app:
+    name: Release MacOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Set up xcode
+        uses: devbotsxyz/xcode-select@v1
+      - name: Build macos
+        env:
+          MACOS_APP_RELEASE_PATH: build/macos/Build/Products/Release
+        run: |
+          cp -f pubspec.yaml assets/
+          flutter config --enable-macos-desktop
+          flutter pub get
+          flutter build macos --release
+          brew install create-dmg
+          cd $MACOS_APP_RELEASE_PATH
+          create-dmg \
+            --volname "jsond Installer" \
+            --window-pos 200 120 \
+            --window-size 800 529 \
+            --icon-size 130 \
+            --text-size 14 \
+            --icon "jsond.app" 260 250 \
+            --hide-extension "jsond.app" \
+            --app-drop-link 540 250 \
+            --hdiutil-quiet \
+            "jsond.dmg" \
+            "jsond.app"
+          cd ../../../../../
+          mv $MACOS_APP_RELEASE_PATH/jsond.dmg jsond.dmg
+      - name: Release build
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          artifacts: "jsond.dmg"
+          token: ${{ secrets.ACTION_TOKEN }}
+          tag: ${{ github.event.inputs.TAG }}
+
