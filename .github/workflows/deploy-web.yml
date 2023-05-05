@@ -8,8 +8,8 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - 'lib/**'
-      - 'web/**'
+      - 'apps/jsond/lib/**'
+      - 'apps/jsond/web/**'
     branches:
       - "main"
 jobs:
