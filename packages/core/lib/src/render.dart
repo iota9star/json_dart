@@ -30,10 +30,10 @@ String render(
   String template, {
   bool dartFormat = false,
 }) {
-  final defs = JsonDefs.fromString(json);
+  final def = JSON.fromString(json);
   final code = renderDefs(
     template,
-    defs.map((e) => e.toJson()).toList(growable: false),
+    def.defs.map((e) => e.toJson()).toList(growable: false),
   );
   if (dartFormat) {
     return DartFormatter(fixes: StyleFix.all).format(code);

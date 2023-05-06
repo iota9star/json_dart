@@ -2,7 +2,7 @@ import 'package:antlr4/antlr4.dart';
 import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
 
-import 'antlr/JSONParser.dart';
+import 'antlr/JSON5Parser.dart';
 import 'extension.dart';
 
 abstract class JType<T extends RuleContext, R> {
@@ -12,7 +12,7 @@ abstract class JType<T extends RuleContext, R> {
 
   final T ctx;
 
-  String get text => ctx.text;
+  String get display => ctx.text;
 
   FieldDef get type;
 
@@ -112,6 +112,17 @@ class ArrayType<R> extends JType<ArrayContext, R> {
     return FieldDef(name: type!.nullable(nullable));
   }();
 
+  @override
+  late final String display = () {
+    final left = ''.padLeft(ctx.indent() * 2);
+    final sb = StringBuffer('[\n');
+    final join = values.map((e) => '$left${e.display}').join(',\n');
+    sb.writeln(join);
+    sb.write(''.padLeft((ctx.indent() - 1) * 2));
+    sb.write(']');
+    return sb.toString();
+  }();
+
   late final obj =
       values.firstWhereOrNull((e) => e.type.type == FieldDefType.object);
   late final hasObj = obj != null;
@@ -180,6 +191,9 @@ class PairType<T extends JType<RuleContext, R>, R>
   int get hashCode => value.deser().hashCode;
 
   @override
+  late final String display = '"$key": ${value.display}';
+
+  @override
   String deser({bool nullable = false}) {
     return value.deser(nullable: nullable);
   }
@@ -210,6 +224,17 @@ class ObjectType<R> extends JType<ObjectContext, R> {
     }
     return '${type.name}.fromJson(${JType.ph} as Map<String, dynamic>,)';
   }
+
+  @override
+  late final String display = () {
+    final left = ''.padLeft(ctx.indent() * 2);
+    final sb = StringBuffer('{\n');
+    final join = pairs.map((e) => '$left${e.display}').join(',\n');
+    sb.writeln(join);
+    sb.write(''.padLeft((ctx.indent() - 1) * 2));
+    sb.write('}');
+    return sb.toString();
+  }();
 }
 
 class FieldDef {

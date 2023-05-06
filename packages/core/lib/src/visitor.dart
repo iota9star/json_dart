@@ -1,12 +1,12 @@
 import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
 
-import 'antlr/JSONBaseVisitor.dart';
-import 'antlr/JSONParser.dart';
+import 'antlr/JSON5BaseVisitor.dart';
+import 'antlr/JSON5Parser.dart';
 import 'extension.dart';
 import 'type.dart';
 
-class JVisitor extends JSONBaseVisitor<JType> {
+class JVisitor extends JSON5BaseVisitor<JType> {
   JVisitor() {
     RuleContextExtension.caches.clear();
   }
@@ -29,9 +29,8 @@ class JVisitor extends JSONBaseVisitor<JType> {
   }
 
   @override
-  JType visitJson(JsonContext ctx) {
-    final jType = visit(ctx.value()!)!;
-    return jType;
+  JType visitJson5(Json5Context ctx) {
+    return visit(ctx.value()!)!;
   }
 
   Map<ObjKey, Set<String>> _getDefSameFields() {
@@ -121,7 +120,7 @@ class JVisitor extends JSONBaseVisitor<JType> {
   @override
   JType visitPair(PairContext ctx) {
     final value = visit(ctx.value()!)!;
-    final key = ctx.STRING()!.text!.noQuot;
+    final key = ctx.key()!.text.noQuot;
     final type = PairType(ctx, key, value);
     final path = ctx.parent!.getPath();
     final objKey = ObjKey(path);

@@ -1,10 +1,18 @@
 import 'package:antlr4/antlr4.dart';
 import 'package:recase/recase.dart';
 
-import 'antlr/JSONParser.dart';
+import 'antlr/JSON5Parser.dart';
 
 extension StringExtension on String {
-  String get noQuot => replaceAll('"', '');
+  String get noQuot {
+    if (startsWith('"') && endsWith('"')) {
+      return substring(1, length - 1);
+    }
+    if (startsWith("'") && endsWith("'")) {
+      return substring(1, length - 1);
+    }
+    return this;
+  }
 
   String nullable(bool value) => value ? '$this?' : this;
 }
@@ -51,12 +59,24 @@ extension RuleContextExtension on RuleContext {
       if (rp is ArrayContext) {
         ids.add(ARRAY_CHAR);
       } else if (rp is PairContext) {
-        ids.add(rp.STRING()!.text!.noQuot);
+        ids.add(rp.key()!.text.noQuot);
       } else if (rp is ObjectContext) {
         ids.add(OBJECT_CHAR);
       }
     }
     caches[parent] = ids;
     return ids;
+  }
+
+  int indent() {
+    RuleContext? p = parent;
+    int n = 0;
+    while (p != null) {
+      if (p is ValueContext) {
+        n++;
+      }
+      p = p.parent;
+    }
+    return n;
   }
 }

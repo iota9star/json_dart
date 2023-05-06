@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:ui';
 
 import 'package:code_text_field/code_text_field.dart';
@@ -383,9 +382,8 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       return false;
     }
     try {
-      final map = jsonDecode(codes);
-      final converted = const JsonEncoder.withIndent('  ').convert(map);
-      _codeController.text = converted;
+      final def = JSON.fromString(codes);
+      _codeController.text = def.type.display;
       return true;
     } catch (e) {
       _showJsonError(context, e);
@@ -1482,9 +1480,8 @@ class _TempEditorState extends State<TempEditor> {
       return false;
     }
     try {
-      final map = jsonDecode(codes);
-      final converted = const JsonEncoder.withIndent('  ').convert(map);
-      _jsonController.text = converted;
+      final def = JSON.fromString(codes);
+      _jsonController.text = def.type.display;
       return true;
     } catch (e) {
       _showJsonError(context, e);

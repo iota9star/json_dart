@@ -2,34 +2,35 @@ import 'dart:convert';
 
 import 'package:antlr4/antlr4.dart';
 
-import 'antlr/JSONLexer.dart';
-import 'antlr/JSONParser.dart';
+import 'antlr/JSON5Lexer.dart';
+import 'antlr/JSON5Parser.dart';
+import 'type.dart';
 import 'visitor.dart';
 
-class JsonDefs {
-  const JsonDefs._();
+class JSON {
+  const JSON._();
 
-  static List<Def> fromString<T>(String str) {
+  static JSONDef fromString<T>(String str) {
     return fromCharStream(InputStream.fromString(str));
   }
 
-  static List<Def> fromBytes<T>(List<int> bytes) {
+  static JSONDef fromBytes<T>(List<int> bytes) {
     return fromCharStream(InputStream(bytes));
   }
 
-  static Future<List<Def>> fromPath<T>(String path) async {
+  static Future<JSONDef> fromPath<T>(String path) async {
     final input = await InputStream.fromPath(path);
     return fromCharStream(input);
   }
 
-  static Future<List<Def>> fromStringStream<T>(
+  static Future<JSONDef> fromStringStream<T>(
     Stream<String> stream,
   ) async {
     final input = await InputStream.fromStringStream(stream);
     return fromCharStream(input);
   }
 
-  static Future<List<Def>> fromStream<T>(
+  static Future<JSONDef> fromStream<T>(
     Stream<List<int>> stream, {
     Encoding encoding = utf8,
   }) async {
@@ -40,18 +41,25 @@ class JsonDefs {
     return fromCharStream(input);
   }
 
-  static List<Def> fromCharStream<T>(
+  static JSONDef fromCharStream<T>(
     CharStream input,
   ) {
-    JSONLexer.checkVersion();
-    JSONParser.checkVersion();
-    final lexer = JSONLexer(input);
+    JSON5Lexer.checkVersion();
+    JSON5Parser.checkVersion();
+    final lexer = JSON5Lexer(input);
     final tokens = CommonTokenStream(lexer);
-    final parser = JSONParser(tokens);
+    final parser = JSON5Parser(tokens);
     parser.addErrorListener(DiagnosticErrorListener());
     parser.buildParseTree = true;
     final visitor = JVisitor();
-    visitor.visit(parser.json())!;
-    return visitor.defs;
+    final type = visitor.visit(parser.json5())!;
+    return JSONDef(type, visitor.defs);
   }
+}
+
+class JSONDef {
+  JSONDef(this.type, this.defs);
+
+  final JType type;
+  final List<Def> defs;
 }

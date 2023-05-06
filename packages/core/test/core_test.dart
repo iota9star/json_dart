@@ -8,8 +8,8 @@ void main() {
   group('A group of tests', () {
     test('templates', () async {
       final dir = '${Directory.current.path}/test/';
-      final list = await JsonDefs.fromPath('$dir/test.json');
-      final defs = list.map((e) => e.toJson()).toList(growable: false);
+      final def = await JSON.fromPath('$dir/test.json');
+      final defs = def.defs.map((e) => e.toJson()).toList(growable: false);
       final tpls = [
         const MapEntry('no_final', no_final),
         const MapEntry('with_final', with_final),
