@@ -134,8 +134,7 @@ class ArrayType<R> extends JType<ArrayContext, R> {
       if (hasObj && hasArray) {
         final objDeser = obj!.deser().replaceAll(JType.ph, 'e');
         final arrDeser = array!.deser().replaceAll(JType.ph, 'e');
-        child =
-            "e is Map ? $objDeser : e is List ? $arrDeser : throw ArgumentError('Unknown value: \$e')";
+        child = 'e is Map ? $objDeser : e is List ? $arrDeser : ${JType.ph}';
       } else if (hasObj) {
         child = obj!.deser().replaceAll(JType.ph, 'e');
       } else if (hasArray) {

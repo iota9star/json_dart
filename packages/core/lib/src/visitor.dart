@@ -43,6 +43,7 @@ class JVisitor extends JSONBaseVisitor<JType> {
         sames[entry.key] = objs.first.fields.map((e) => e.key).toSet();
       } else {
         final keys = <String>{};
+        final noc = <String>{};
         outer:
         for (int index = 0; index < length; index++) {
           if (index < length - 1) {
@@ -50,12 +51,19 @@ class JVisitor extends JSONBaseVisitor<JType> {
             final next = objs[index + 1];
             int sc = 0;
             for (final field in curr.fields) {
-              final exist = next.fields.any((e) => e.key == field.key);
+              final key = field.key;
+              final exist = next.fields.any((e) => e.key == key);
               if (exist) {
-                keys.add(field.key);
-                sc++;
+                if (sc > 0 && !keys.contains(key)) {
+                  noc.add(key);
+                  keys.remove(key);
+                } else {
+                  keys.add(key);
+                  sc++;
+                }
               } else {
-                keys.remove(field.key);
+                noc.add(key);
+                keys.remove(key);
               }
             }
             if (sc == 0) {
@@ -64,6 +72,7 @@ class JVisitor extends JSONBaseVisitor<JType> {
             }
           }
         }
+        keys.removeAll(noc);
         sames[entry.key] = keys;
       }
     }
@@ -203,7 +212,9 @@ class Field {
     bool? nullable,
     PairType? type,
   }) {
-    if (rawDef != null && rawDef.type != FieldDefType.dynamic) {
+    if (rawDef != null &&
+        rawDef.type != FieldDefType.dynamic &&
+        this.rawDef?.type != FieldDefType.dynamic) {
       if (this.rawDef?.name != rawDef.name &&
           this.rawDef?.type != FieldDefType.dynamic) {
         this.rawDef = FieldDef(name: 'dynamic', type: FieldDefType.dynamic);
@@ -228,11 +239,6 @@ class Field {
   @override
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
   int get hashCode => key.hashCode;
-
-  @override
-  String toString() {
-    return 'Field(key: $key, type: $rawDef, nullable: $nullable)';
-  }
 
   Map<String, dynamic> toJson() {
     final array = types.firstWhereOrNull(

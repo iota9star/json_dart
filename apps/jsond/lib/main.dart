@@ -18,19 +18,13 @@ import 'package:sliver_tools/sliver_tools.dart';
 import 'package:universal_platform/universal_platform.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'consts.dart';
 import 'internal/hive.dart';
+import 'notifiers.dart';
 import 'res/fonts.gen.dart';
 import 'widget/ripple_tap.dart';
 
 part 'main.g.dart';
-
-const _defaultJson =
-// language=json
-    '''
-{
-  "hint": "Please enter your JSON in this field."
-}
-''';
 
 MediaQueryData get mediaQuery => MediaQueryData.fromWindow(window);
 
@@ -173,10 +167,16 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
   ];
 
   final _codes = ValueNotifier<List<String>>([]);
-  final _jsonContentWidth = ValueNotifier(300.0);
+  final _jsonContentWidth = ValueNotifier(() {
+    final width = mediaQuery.size.width - 240.0 - 20.0;
+    if (width > 600.0) {
+      return width / 2.0;
+    }
+    return 300.0;
+  }());
   late final _selected = ValueNotifier(_builtInTemplates.first);
   late final _codeController =
-      CodeController(language: json, text: _defaultJson);
+      CodeController(language: json, text: defaultJson);
   final _focusNode = FocusNode();
 
   @override
@@ -198,7 +198,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
             await _showEmptyInfo(context);
             return;
           }
-          final formatted = _formatJsonContent(theme, codes);
+          final formatted = _formatJsonContent(context, codes);
           if (!formatted) {
             return;
           }
@@ -251,28 +251,6 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
             size: 16.0,
           ),
         ),
-      ),
-    );
-  }
-
-  Future<void> _showEmptyInfo(BuildContext context) {
-    return showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Please enter JSON'),
-        content: const Text(
-          'Before we start messing around, should we get some JSON first?',
-        ),
-        actions: <Widget>[
-          TextButton(
-            child: const Text('Okay'),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          FilledButton(
-            child: const Text('Dismiss'),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ],
       ),
     );
   }
@@ -332,7 +310,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              SizedBox.expand(
+              Positioned.fill(
                 child: GestureDetector(
                   onTap: () {
                     if (!_focusNode.hasFocus) {
@@ -368,7 +346,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                     ElevatedButton.icon(
                       onPressed: () {
                         final codes = _codeController.text.trim();
-                        _formatJsonContent(theme, codes);
+                        _formatJsonContent(context, codes);
                       },
                       icon: const Icon(
                         Icons.format_indent_increase_rounded,
@@ -398,7 +376,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
   }
 
   bool _formatJsonContent(
-    ThemeData theme,
+    BuildContext context,
     String codes,
   ) {
     if (codes.isEmpty) {
@@ -410,52 +388,13 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       _codeController.text = converted;
       return true;
     } catch (e) {
-      _showJsonError(theme, e);
+      _showJsonError(context, e);
     }
     return false;
   }
 
-  Future<void> _showJsonError(ThemeData theme, Object e) {
-    return showModalBottomSheet<void>(
-      context: context,
-      constraints: const BoxConstraints(maxWidth: 640.0),
-      shape: const RoundedRectangleBorder(),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Please check whether the JSON content is valid.',
-                style: theme.textTheme.titleMedium,
-              ),
-              Container(
-                padding: const EdgeInsets.all(16.0),
-                margin: const EdgeInsets.only(top: 16.0),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: theme.dividerColor,
-                  ),
-                ),
-                child: Text(
-                  e.toString(),
-                  style: TextStyle(
-                    fontSize: 14.0,
-                    color: theme.colorScheme.error,
-                    fontFamily: FontFamily.agave,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   Widget _buildTemplatePanel(ThemeData theme) {
+    final colors = theme.colorScheme;
     return SizedBox(
       width: 240.0,
       height: double.infinity,
@@ -489,9 +428,22 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                                 onPressed: () {
                                   _showSettingPanel(context);
                                 },
+                                tooltip: 'Settings',
                                 icon: const Icon(
                                   Icons.settings_outlined,
                                   size: 20.0,
+                                ),
+                                style: IconButton.styleFrom(
+                                  foregroundColor: colors.primary,
+                                  backgroundColor: colors.surfaceVariant,
+                                  disabledForegroundColor:
+                                      colors.onSurface.withOpacity(0.38),
+                                  disabledBackgroundColor:
+                                      colors.onSurface.withOpacity(0.12),
+                                  hoverColor: colors.primary.withOpacity(0.08),
+                                  focusColor: colors.primary.withOpacity(0.12),
+                                  highlightColor:
+                                      colors.primary.withOpacity(0.12),
                                 ),
                               ),
                             ],
@@ -902,6 +854,69 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
   }
 }
 
+Future<void> _showEmptyInfo(BuildContext context) {
+  return showDialog<void>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Please enter JSON'),
+      content: const Text(
+        'Before we start messing around, should we get some JSON first?',
+      ),
+      actions: <Widget>[
+        TextButton(
+          child: const Text('Okay'),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        FilledButton(
+          child: const Text('Dismiss'),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ],
+    ),
+  );
+}
+
+Future<void> _showJsonError(BuildContext context, Object e) {
+  return showModalBottomSheet<void>(
+    context: context,
+    constraints: const BoxConstraints(maxWidth: 640.0),
+    shape: const RoundedRectangleBorder(),
+    builder: (context) {
+      final theme = Theme.of(context);
+      return Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Please check whether the JSON content is valid.',
+              style: theme.textTheme.titleMedium,
+            ),
+            Container(
+              padding: const EdgeInsets.all(16.0),
+              margin: const EdgeInsets.only(top: 16.0),
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: theme.dividerColor,
+                ),
+              ),
+              child: Text(
+                e.toString(),
+                style: TextStyle(
+                  fontSize: 14.0,
+                  color: theme.colorScheme.error,
+                  fontFamily: FontFamily.agave,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
 void _showSnackbar(
   BuildContext context,
   String message, {
@@ -923,6 +938,14 @@ void _showSnackbar(
   ScaffoldMessenger.of(context).showSnackBar(snackBar);
 }
 
+enum EditorPanel {
+  func,
+  tpl,
+  json,
+  code,
+  ;
+}
+
 class TempEditor extends StatefulWidget {
   const TempEditor({super.key, this.template});
 
@@ -933,19 +956,29 @@ class TempEditor extends StatefulWidget {
 }
 
 class _TempEditorState extends State<TempEditor> {
-  late final _codeController = CodeController(
+  late final _templateController = CodeController(
     language: handlebars,
-    text: widget.template?.template ?? '',
+    text: widget.template?.template ?? defaultTemplate,
   );
+
+  late final _jsonController = CodeController(
+    language: json,
+    text: testJson,
+  );
+
   late final _nameEC = TextEditingController(text: widget.template?.name ?? '');
 
   static const _shortcuts = [
     MapEntry('Defs', '{{# defs }}{{/ defs }}'),
     MapEntry(
+      'ObjName',
+      '{{ obj_name }}',
+    ),
+    MapEntry('ObjFields', '{{# obj_fields }}{{/ obj_fields }}'),
+    MapEntry(
       'PascalCaseObjName',
       '{{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }}',
     ),
-    MapEntry('ObjFields', '{{# obj_fields }}{{/ obj_fields }}'),
     MapEntry('ObjFieldsLength', '{{ obj_fields_length }}'),
     MapEntry('Field', '{{ field_key }}'),
     MapEntry('FieldIndex', '{{ field_index }}'),
@@ -976,6 +1009,9 @@ class _TempEditorState extends State<TempEditor> {
       'DeserCamelCaseField',
       '{{# @deser_field }}{{# @camel_case }}{{ field_key }}{{/ @camel_case }}{{/ @deser_field }}',
     ),
+  ];
+
+  static const _helpers = [
     MapEntry('@PascalCase', '{{# @pascal_case }}{{/ @pascal_case }}'),
     MapEntry('@CamelCase', '{{# @camel_case }}{{/ @camel_case }}'),
     MapEntry('@ConstantCase', '{{# @constant_case }}{{/ @constant_case }}'),
@@ -987,16 +1023,48 @@ class _TempEditorState extends State<TempEditor> {
     MapEntry('@TitleCase', '{{# @title_case }}{{/ @title_case }}'),
   ];
 
+  static final _objKeys = [
+    'obj_path',
+    'obj_name',
+    'obj_fields_length',
+    'obj_fields',
+  ].map((e) => MapEntry(e, '{{ $e }}')).toList(growable: false);
+
+  static final _fieldKeys = [
+    'field_key',
+    'field_type',
+    'field_type_name',
+    'field_is_dynamic',
+    'field_is_object',
+    'field_is_array',
+    'field_is_primitive',
+    'field_is_complex',
+    'field_nullable',
+    'field_deser',
+  ].map((e) => MapEntry(e, '{{ $e }}')).toList(growable: false);
+
   late final _useDartFormat =
       ValueNotifier(widget.template?.dartFormat ?? false);
+  late final _codes = ValueNotifier('');
+  late final _options = NewValueNotifier(PanelOption());
   late final isNew = widget.template == null || !widget.template!.isInBox;
-  final _focusNode = FocusNode();
+  final _tplFocusNode = FocusNode();
+  final _jsonFocusNode = FocusNode();
+  final _jsonContentWidth = ValueNotifier(() {
+    final width = mediaQuery.size.width - 240.0 - 20.0;
+    if (width > 600.0) {
+      return width / 2.0;
+    }
+    return 300.0;
+  }());
 
   @override
   void dispose() {
-    _codeController.dispose();
+    _templateController.dispose();
+    _jsonController.dispose();
     _nameEC.dispose();
-    _focusNode.dispose();
+    _tplFocusNode.dispose();
+    _jsonFocusNode.dispose();
     super.dispose();
   }
 
@@ -1011,40 +1079,245 @@ class _TempEditorState extends State<TempEditor> {
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.of(context).pop(),
         ),
+        actions: [
+          ValueListenableBuilder(
+            valueListenable: _options,
+            builder: (context, options, child) {
+              return SegmentedButton<EditorPanel>(
+                segments: const [
+                  ButtonSegment<EditorPanel>(
+                    value: EditorPanel.func,
+                    icon: Icon(Icons.menu_rounded),
+                  ),
+                  ButtonSegment<EditorPanel>(
+                    value: EditorPanel.tpl,
+                    icon: Icon(Icons.code_rounded),
+                  ),
+                  ButtonSegment<EditorPanel>(
+                    value: EditorPanel.json,
+                    icon: Icon(Icons.flag_circle_outlined),
+                  ),
+                  ButtonSegment<EditorPanel>(
+                    value: EditorPanel.code,
+                    icon: Icon(Icons.subject_outlined),
+                  ),
+                ],
+                selected: options.sets,
+                onSelectionChanged: (newSets) {
+                  _options.newValue(options..sets = newSets);
+                },
+                multiSelectionEnabled: true,
+              );
+            },
+          ),
+          const SizedBox(width: 24.0),
+        ],
       ),
-      body: Row(
+      body: ValueListenableBuilder(
+        valueListenable: _options,
+        builder: (context, options, child) {
+          return Row(
+            children: [
+              if (options.func) _buildLeftPanel(context, theme),
+              if (options.tpl) _buildCodePanel(theme),
+              if (options.tpl && (options.json || options.code))
+                _buildDragBar(),
+              _buildRightPanel(theme, options),
+            ],
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          final json = _jsonController.text.trim();
+          if (json.isEmpty) {
+            await _showEmptyInfo(context);
+            return;
+          }
+          final formatted = _formatJsonContent(context, json);
+          if (!formatted) {
+            return;
+          }
+          final tpl = _templateController.text;
+          final code = render(json, tpl, dartFormat: _useDartFormat.value);
+          _codes.value = code;
+        },
+        label: const Text('Test'),
+        icon: const Icon(
+          Icons.flag_outlined,
+          size: 16.0,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRightPanel(ThemeData theme, PanelOption options) {
+    return Expanded(
+      child: Column(
         children: [
-          _buildLeftPanel(context, theme),
-          _buildCodePanel(theme),
+          if (options.json)
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        if (!_jsonFocusNode.hasFocus) {
+                          _jsonFocusNode.requestFocus();
+                        }
+                      },
+                      child: CodeTheme(
+                        data: CodeThemeData(styles: getCodeTheme(theme)),
+                        child: CodeField(
+                          controller: _jsonController,
+                          wrap: true,
+                          focusNode: _jsonFocusNode,
+                          textStyle: const TextStyle(
+                            fontFamily: FontFamily.agave,
+                            fontSize: 14.0,
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 8.0,
+                    ),
+                    child: Wrap(
+                      spacing: 8.0,
+                      runSpacing: 8.0,
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            _jsonController.text = testJson;
+                          },
+                          icon: const Icon(
+                            Icons.refresh_rounded,
+                            size: 16.0,
+                          ),
+                          label: const Text('Reset'),
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            final codes = _jsonController.text.trim();
+                            _formatJsonContent(context, codes);
+                          },
+                          icon: const Icon(
+                            Icons.format_indent_increase_rounded,
+                            size: 16.0,
+                          ),
+                          label: const Text('format'),
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            _jsonController.text = '';
+                            _codes.value = '';
+                          },
+                          icon: const Icon(
+                            Icons.clear_all_rounded,
+                            size: 16.0,
+                          ),
+                          label: const Text('clear'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          if (options.json && options.code) const Divider(),
+          if (options.code)
+            Expanded(
+              child: Container(
+                color: theme.colorScheme.onSecondary,
+                width: double.infinity,
+                height: double.infinity,
+                child: SingleChildScrollView(
+                  child: ValueListenableBuilder(
+                    valueListenable: _codes,
+                    builder: (context, codes, child) {
+                      return HighlightView(
+                        codes,
+                        language: 'dart',
+                        textStyle: const TextStyle(
+                          fontFamily: FontFamily.agave,
+                          height: 1.5,
+                        ),
+                        theme: getCodeTheme(theme),
+                        padding: const EdgeInsets.all(24.0),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildCodePanel(ThemeData theme) {
-    return Expanded(
-      child: SizedBox.expand(
-        child: GestureDetector(
-          onTap: () {
-            if (!_focusNode.hasFocus) {
-              _focusNode.requestFocus();
-            }
-          },
-          child: CodeTheme(
-            data: CodeThemeData(styles: getCodeTheme(theme)),
-            child: CodeField(
-              controller: _codeController,
-              wrap: true,
-              focusNode: _focusNode,
-              textStyle: const TextStyle(
-                fontFamily: FontFamily.agave,
-                fontSize: 14.0,
-                height: 1.5,
-              ),
-            ),
+  Widget _buildDragBar() {
+    return MouseRegion(
+      cursor: SystemMouseCursors.resizeColumn,
+      child: GestureDetector(
+        onHorizontalDragUpdate: (d) {
+          final oldWidth = _jsonContentWidth.value;
+          if (oldWidth <= 300.0 && d.delta.dx < 0) {
+            _jsonContentWidth.value = 300.0;
+            return;
+          }
+          final newValue = oldWidth + d.delta.dx;
+          if (mediaQuery.size.width - newValue - 280.0 < 20.0) {
+            return;
+          }
+          _jsonContentWidth.value = newValue;
+        },
+        child: Container(
+          width: 20.0,
+          height: double.infinity,
+          alignment: Alignment.center,
+          child: const Icon(
+            Icons.drag_indicator_rounded,
+            size: 16.0,
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildCodePanel(ThemeData theme) {
+    return ValueListenableBuilder(
+      valueListenable: _jsonContentWidth,
+      builder: (context, width, child) {
+        return SizedBox(
+          width: width,
+          height: double.infinity,
+          child: GestureDetector(
+            onTap: () {
+              if (!_tplFocusNode.hasFocus) {
+                _tplFocusNode.requestFocus();
+              }
+            },
+            child: CodeTheme(
+              data: CodeThemeData(styles: getCodeTheme(theme)),
+              child: CodeField(
+                controller: _templateController,
+                wrap: true,
+                focusNode: _tplFocusNode,
+                textStyle: const TextStyle(
+                  fontFamily: FontFamily.agave,
+                  fontSize: 14.0,
+                  height: 1.5,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -1112,13 +1385,13 @@ class _TempEditorState extends State<TempEditor> {
                         final newTpl = Template(
                           id: DateTime.now().millisecondsSinceEpoch,
                           name: name,
-                          template: _codeController.text,
+                          template: _templateController.text,
                           dartFormat: _useDartFormat.value,
                         );
                         box.add(newTpl);
                       } else {
                         final template = widget.template!;
-                        template.template = _codeController.text;
+                        template.template = _templateController.text;
                         template.name = _nameEC.text;
                         template.dartFormat = _useDartFormat.value;
                         template.builtIn = false;
@@ -1135,48 +1408,97 @@ class _TempEditorState extends State<TempEditor> {
               ),
             ),
           ),
-          SliverPinnedHeader(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 12.0,
-              ),
-              child: Text(
-                'Shortcut',
-                style: theme.textTheme.titleSmall,
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.only(
-                left: 16.0,
-                right: 16.0,
-                bottom: 24.0,
-              ),
-              child: Wrap(
-                runSpacing: 8.0,
-                spacing: 8.0,
-                children: List.generate(_shortcuts.length, (index) {
-                  final short = _shortcuts[index];
-                  return ActionChip(
-                    label: Text(short.key),
-                    padding: EdgeInsets.zero,
-                    labelStyle: theme.textTheme.labelSmall,
-                    tooltip: short.value,
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: short.value));
-                      _showSnackbar(context, 'Copied: ${short.value}');
-                    },
-                  );
-                }),
-              ),
-            ),
-          ),
+          _buildSection(context, 'Shortcuts', _shortcuts),
+          _buildSection(context, 'Field Keys', _fieldKeys),
+          _buildSection(context, 'Object Keys', _objKeys),
+          _buildSection(context, 'Helpers', _helpers),
+          const SliverToBoxAdapter(child: SizedBox(height: 24.0)),
         ],
       ),
     );
   }
+
+  Widget _buildSection(
+    BuildContext context,
+    String title,
+    List<MapEntry<String, String>> entries,
+  ) {
+    final theme = Theme.of(context);
+    return MultiSliver(
+      pushPinnedChildren: true,
+      children: [
+        SliverPinnedHeader(
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 12.0,
+            ),
+            decoration: BoxDecoration(color: theme.cardColor),
+            child: Text(
+              title,
+              style: theme.textTheme.titleSmall,
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.only(
+              left: 16.0,
+              right: 16.0,
+              bottom: 16.0,
+            ),
+            child: Wrap(
+              runSpacing: 8.0,
+              spacing: 8.0,
+              children: List.generate(entries.length, (index) {
+                final short = entries[index];
+                return ActionChip(
+                  label: Text(short.key),
+                  padding: EdgeInsets.zero,
+                  labelStyle: theme.textTheme.labelSmall,
+                  tooltip: short.value,
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: short.value));
+                    _showSnackbar(context, 'Copied: ${short.value}');
+                  },
+                );
+              }),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  bool _formatJsonContent(
+    BuildContext context,
+    String codes,
+  ) {
+    if (codes.isEmpty) {
+      return false;
+    }
+    try {
+      final map = jsonDecode(codes);
+      final converted = const JsonEncoder.withIndent('  ').convert(map);
+      _jsonController.text = converted;
+      return true;
+    } catch (e) {
+      _showJsonError(context, e);
+    }
+    return false;
+  }
+}
+
+class PanelOption {
+  Set<EditorPanel> sets = EditorPanel.values.toSet();
+
+  bool get func => sets.contains(EditorPanel.func);
+
+  bool get tpl => sets.contains(EditorPanel.tpl);
+
+  bool get json => sets.contains(EditorPanel.json);
+
+  bool get code => sets.contains(EditorPanel.code);
 }
 
 @HiveType(typeId: 1)
