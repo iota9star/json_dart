@@ -12,7 +12,9 @@ class {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }} {
 {{/ field_is_complex }}
 {{/ obj_fields }}
     return {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }}()
-{{# obj_fields }}      ..{{# @camel_case }}{{ field_key }}{{/ @camel_case }} = {{# field_is_complex }}{{# @deser_field }}{{# @camel_case }}{{ field_key }}{{/ @camel_case }}{{/ @deser_field }}{{/ field_is_complex }}{{^ field_is_complex }}json['{{ field_key }}']{{/ field_is_complex }}{{/ obj_fields }};
+{{# obj_fields }}
+      ..{{# @camel_case }}{{ field_key }}{{/ @camel_case }} = {{# field_is_complex }}{{# @deser_field }}{{# @camel_case }}{{ field_key }}{{/ @camel_case }}{{/ @deser_field }}{{/ field_is_complex }}{{^ field_is_complex }}json['{{ field_key }}']{{/ field_is_complex }}
+{{/ obj_fields }};
   }
 
 {{# obj_fields }}
@@ -29,12 +31,31 @@ class {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }} {
 
   {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }} copyWith({
 {{# obj_fields }}
-    {{& field_type_name }}? {{# @camel_case }}{{ field_key }}{{/ @camel_case }},
+    {{& field_type_name }}{{^ field_is_dynamic }}?{{/ field_is_dynamic }} {{# @camel_case }}{{ field_key }}{{/ @camel_case }},
 {{/ obj_fields }}
   }) {
     return {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }}()
-{{# obj_fields }}      ..{{# @camel_case }}{{ field_key }}{{/ @camel_case }} = {{# @camel_case }}{{ field_key }}{{/ @camel_case }} ?? this.{{# @camel_case }}{{ field_key }}{{/ @camel_case }}{{/ obj_fields }};
+{{# obj_fields }}
+      ..{{# @camel_case }}{{ field_key }}{{/ @camel_case }} = {{# @camel_case }}{{ field_key }}{{/ @camel_case }} ?? this.{{# @camel_case }}{{ field_key }}{{/ @camel_case }}
+{{/ obj_fields }};
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }} &&
+          runtimeType == other.runtimeType &&
+{{# obj_fields }}
+          {{# field_is_array }}const DeepCollectionEquality().equals({{# @camel_case }}{{ field_key }}{{/ @camel_case }}, other.{{# @camel_case }}{{ field_key }}{{/ @camel_case }}){{/ field_is_array }}{{^ field_is_array }}{{# @camel_case }}{{ field_key }}{{/ @camel_case }} == other.{{# @camel_case }}{{ field_key }}{{/ @camel_case }}{{/ field_is_array }}{{^ field_is_last }} &&{{/ field_is_last }}
+{{/ obj_fields }};
+
+  @override
+  int get hashCode => Object.hashAll([
+{{# obj_fields }}
+        {{# field_is_array }}const DeepCollectionEquality().hash({{# @camel_case }}{{ field_key }}{{/ @camel_case }}){{/ field_is_array }}{{^ field_is_array }}{{# @camel_case }}{{ field_key }}{{/ @camel_case }}.hashCode{{/ field_is_array }},
+{{/ obj_fields }}
+      ]);
+
 }
 
 {{/ defs }}
@@ -75,6 +96,35 @@ class {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }} {
      {{/ obj_fields }}
     };
   }
+
+  {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }} copyWith({
+{{# obj_fields }}
+    {{& field_type_name }}{{^ field_is_dynamic }}?{{/ field_is_dynamic }} {{# @camel_case }}{{ field_key }}{{/ @camel_case }},
+{{/ obj_fields }}
+  }) {
+    return {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }}(
+{{# obj_fields }}
+      {{# @camel_case }}{{ field_key }}{{/ @camel_case }}: {{# @camel_case }}{{ field_key }}{{/ @camel_case }} ?? this.{{# @camel_case }}{{ field_key }}{{/ @camel_case }},
+{{/ obj_fields }}
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }} &&
+          runtimeType == other.runtimeType &&
+{{# obj_fields }}
+          {{# field_is_array }}const DeepCollectionEquality().equals({{# @camel_case }}{{ field_key }}{{/ @camel_case }}, other.{{# @camel_case }}{{ field_key }}{{/ @camel_case }}){{/ field_is_array }}{{^ field_is_array }}{{# @camel_case }}{{ field_key }}{{/ @camel_case }} == other.{{# @camel_case }}{{ field_key }}{{/ @camel_case }}{{/ field_is_array }}{{^ field_is_last }} &&{{/ field_is_last }}
+{{/ obj_fields }};
+
+  @override
+  int get hashCode => Object.hashAll([
+{{# obj_fields }}
+        {{# field_is_array }}const DeepCollectionEquality().hash({{# @camel_case }}{{ field_key }}{{/ @camel_case }}){{/ field_is_array }}{{^ field_is_array }}{{# @camel_case }}{{ field_key }}{{/ @camel_case }}.hashCode{{/ field_is_array }},
+{{/ obj_fields }}
+      ]);
+
 }
 
 {{/ defs }}
@@ -100,6 +150,34 @@ class {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }} {
 {{/ obj_fields }}
 
   Map<String, dynamic> toJson() => _${{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }}ToJson(this);
+
+  {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }} copyWith({
+{{# obj_fields }}
+    {{& field_type_name }}{{^ field_is_dynamic }}?{{/ field_is_dynamic }} {{# @camel_case }}{{ field_key }}{{/ @camel_case }},
+{{/ obj_fields }}
+  }) {
+    return {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }}(
+{{# obj_fields }}
+      {{# @camel_case }}{{ field_key }}{{/ @camel_case }}: {{# @camel_case }}{{ field_key }}{{/ @camel_case }} ?? this.{{# @camel_case }}{{ field_key }}{{/ @camel_case }},
+{{/ obj_fields }}
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }} &&
+          runtimeType == other.runtimeType &&
+{{# obj_fields }}
+          {{# field_is_array }}const DeepCollectionEquality().equals({{# @camel_case }}{{ field_key }}{{/ @camel_case }}, other.{{# @camel_case }}{{ field_key }}{{/ @camel_case }}){{/ field_is_array }}{{^ field_is_array }}{{# @camel_case }}{{ field_key }}{{/ @camel_case }} == other.{{# @camel_case }}{{ field_key }}{{/ @camel_case }}{{/ field_is_array }}{{^ field_is_last }} &&{{/ field_is_last }}
+{{/ obj_fields }};
+
+  @override
+  int get hashCode => Object.hashAll([
+{{# obj_fields }}
+        {{# field_is_array }}const DeepCollectionEquality().hash({{# @camel_case }}{{ field_key }}{{/ @camel_case }}){{/ field_is_array }}{{^ field_is_array }}{{# @camel_case }}{{ field_key }}{{/ @camel_case }}.hashCode{{/ field_is_array }},
+{{/ obj_fields }}
+      ]);
 
 }
 

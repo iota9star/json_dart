@@ -63,8 +63,6 @@ Future<void> main() async {
   if (UniversalPlatform.isDesktop) {
     await windowManager.ensureInitialized();
     const windowOptions = WindowOptions(
-      center: true,
-      size: Size(800.0, 600.0),
       minimumSize: Size(800.0, 600.0),
       skipTaskbar: false,
     );
@@ -131,6 +129,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
   void dispose() {
     windowManager.removeListener(this);
     _codeController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -144,15 +143,15 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
 
   final _builtInTemplates = [
     Template(
-      name: 'No Final',
-      template: no_final,
+      name: 'With Final',
+      template: with_final,
       builtIn: true,
       dartFormat: true,
       id: -1,
     ),
     Template(
-      name: 'With Final',
-      template: with_final,
+      name: 'No Final',
+      template: no_final,
       builtIn: true,
       dartFormat: true,
       id: -2,
@@ -178,6 +177,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
   late final _selected = ValueNotifier(_builtInTemplates.first);
   late final _codeController =
       CodeController(language: json, text: _defaultJson);
+  final _focusNode = FocusNode();
 
   @override
   Widget build(BuildContext context) {
@@ -202,7 +202,8 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
           if (!formatted) {
             return;
           }
-          final dart = render(codes, _selected.value.template);
+          final tpl = _selected.value;
+          final dart = render(codes, tpl.template, dartFormat: tpl.dartFormat);
           _codes.value = dart
               .split('\n')
               .slices(500)
@@ -285,20 +286,6 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
               valueListenable: _codes,
               builder: (context, codes, child) {
                 final length = codes.length;
-                if (length == 1) {
-                  return SizedBox.expand(
-                    child: HighlightView(
-                      codes.first,
-                      language: 'dart',
-                      textStyle: const TextStyle(
-                        fontFamily: FontFamily.agave,
-                        height: 1.5,
-                      ),
-                      theme: getCodeTheme(theme),
-                      padding: const EdgeInsets.all(24.0),
-                    ),
-                  );
-                }
                 return ListView.builder(
                   itemBuilder: (context, index) {
                     return HighlightView(
@@ -346,17 +333,25 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
             fit: StackFit.expand,
             children: [
               SizedBox.expand(
-                child: CodeTheme(
-                  data: CodeThemeData(
-                    styles: getCodeTheme(theme),
-                  ),
-                  child: CodeField(
-                    controller: _codeController,
-                    wrap: true,
-                    textStyle: const TextStyle(
-                      fontFamily: FontFamily.agave,
-                      fontSize: 14.0,
-                      height: 1.5,
+                child: GestureDetector(
+                  onTap: () {
+                    if (!_focusNode.hasFocus) {
+                      _focusNode.requestFocus();
+                    }
+                  },
+                  child: CodeTheme(
+                    data: CodeThemeData(
+                      styles: getCodeTheme(theme),
+                    ),
+                    child: CodeField(
+                      controller: _codeController,
+                      focusNode: _focusNode,
+                      wrap: true,
+                      textStyle: const TextStyle(
+                        fontFamily: FontFamily.agave,
+                        fontSize: 14.0,
+                        height: 1.5,
+                      ),
                     ),
                   ),
                 ),
@@ -910,7 +905,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
 void _showSnackbar(
   BuildContext context,
   String message, {
-  Duration duration = const Duration(seconds: 2),
+  Duration duration = const Duration(milliseconds: 1600),
 }) {
   final snackBar = SnackBar(
     behavior: SnackBarBehavior.floating,
@@ -954,7 +949,7 @@ class _TempEditorState extends State<TempEditor> {
     MapEntry('ObjFieldsLength', '{{ obj_fields_length }}'),
     MapEntry('Field', '{{ field_key }}'),
     MapEntry('FieldIndex', '{{ field_index }}'),
-    MapEntry('field_is_last', '{{# field_is_last }}{{/ field_is_last }}'),
+    MapEntry('FieldIsLast', '{{# field_is_last }}{{/ field_is_last }}'),
     MapEntry(
       'CamelCaseField',
       '{{# @camel_case }}{{ field_key }}{{/ @camel_case }}',
@@ -964,8 +959,10 @@ class _TempEditorState extends State<TempEditor> {
     MapEntry('FieldDeser', '{{ field_deser }}'),
     MapEntry('FieldIsObject', '{{# field_is_object }}{{/ field_is_object }}'),
     MapEntry('FieldIsArray', '{{# field_is_array }}{{/ field_is_array }}'),
-    MapEntry('FieldIsPrimitive',
-        '{{# field_is_primitive }}{{/ field_is_primitive }}'),
+    MapEntry(
+      'FieldIsPrimitive',
+      '{{# field_is_primitive }}{{/ field_is_primitive }}',
+    ),
     MapEntry(
       'FieldIsDynamic',
       '{{# field_is_dynamic }}{{/ field_is_dynamic }}',
@@ -992,15 +989,16 @@ class _TempEditorState extends State<TempEditor> {
 
   late final _useDartFormat =
       ValueNotifier(widget.template?.dartFormat ?? false);
+  late final isNew = widget.template == null || !widget.template!.isInBox;
+  final _focusNode = FocusNode();
 
   @override
   void dispose() {
     _codeController.dispose();
     _nameEC.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
-
-  late final isNew = widget.template == null || !widget.template!.isInBox;
 
   @override
   Widget build(BuildContext context) {
@@ -1025,23 +1023,27 @@ class _TempEditorState extends State<TempEditor> {
 
   Widget _buildCodePanel(ThemeData theme) {
     return Expanded(
-      child: Column(
-        children: [
-          Expanded(
-            child: CodeTheme(
-              data: CodeThemeData(styles: getCodeTheme(theme)),
-              child: CodeField(
-                controller: _codeController,
-                wrap: true,
-                textStyle: const TextStyle(
-                  fontFamily: FontFamily.agave,
-                  fontSize: 14.0,
-                  height: 1.5,
-                ),
+      child: SizedBox.expand(
+        child: GestureDetector(
+          onTap: () {
+            if (!_focusNode.hasFocus) {
+              _focusNode.requestFocus();
+            }
+          },
+          child: CodeTheme(
+            data: CodeThemeData(styles: getCodeTheme(theme)),
+            child: CodeField(
+              controller: _codeController,
+              wrap: true,
+              focusNode: _focusNode,
+              textStyle: const TextStyle(
+                fontFamily: FontFamily.agave,
+                fontSize: 14.0,
+                height: 1.5,
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
