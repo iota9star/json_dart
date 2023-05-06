@@ -1119,7 +1119,8 @@ class _TempEditorState extends State<TempEditor> {
           return Row(
             children: [
               if (options.func) _buildLeftPanel(context, theme),
-              if (options.tpl) _buildCodePanel(theme),
+              if (options.tpl)
+                _buildCodePanel(theme, options.json || options.code),
               if (options.tpl && (options.json || options.code))
                 _buildDragBar(),
               _buildRightPanel(theme, options),
@@ -1229,7 +1230,6 @@ class _TempEditorState extends State<TempEditor> {
                 ],
               ),
             ),
-          if (options.json && options.code) const Divider(),
           if (options.code)
             Expanded(
               child: Container(
@@ -1289,36 +1289,40 @@ class _TempEditorState extends State<TempEditor> {
     );
   }
 
-  Widget _buildCodePanel(ThemeData theme) {
-    return ValueListenableBuilder(
-      valueListenable: _jsonContentWidth,
-      builder: (context, width, child) {
-        return SizedBox(
-          width: width,
-          height: double.infinity,
-          child: GestureDetector(
-            onTap: () {
-              if (!_tplFocusNode.hasFocus) {
-                _tplFocusNode.requestFocus();
-              }
-            },
-            child: CodeTheme(
-              data: CodeThemeData(styles: getCodeTheme(theme)),
-              child: CodeField(
-                controller: _templateController,
-                wrap: true,
-                focusNode: _tplFocusNode,
-                textStyle: const TextStyle(
-                  fontFamily: FontFamily.agave,
-                  fontSize: 14.0,
-                  height: 1.5,
-                ),
-              ),
-            ),
-          ),
-        );
+  Widget _buildCodePanel(ThemeData theme, bool limit) {
+    final child = GestureDetector(
+      onTap: () {
+        if (!_tplFocusNode.hasFocus) {
+          _tplFocusNode.requestFocus();
+        }
       },
+      child: CodeTheme(
+        data: CodeThemeData(styles: getCodeTheme(theme)),
+        child: CodeField(
+          controller: _templateController,
+          wrap: true,
+          focusNode: _tplFocusNode,
+          textStyle: const TextStyle(
+            fontFamily: FontFamily.agave,
+            fontSize: 14.0,
+            height: 1.5,
+          ),
+        ),
+      ),
     );
+    if (limit) {
+      return ValueListenableBuilder(
+        valueListenable: _jsonContentWidth,
+        builder: (context, width, child) {
+          return SizedBox(
+            width: width,
+            height: double.infinity,
+            child: child,
+          );
+        },
+      );
+    }
+    return Expanded(child: child);
   }
 
   Widget _buildLeftPanel(
