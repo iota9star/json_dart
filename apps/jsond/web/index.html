@@ -18,18 +18,18 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="A template-supported tool for converting JSON to Dart code.">
 
   <!-- iOS meta tags & icons -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="jsond">
+  <meta name="apple-mobile-web-app-title" content="JSOND">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>jsond</title>
+  <title>JSOND</title>
   <link rel="manifest" href="manifest.json">
 
   <script>
@@ -38,22 +38,59 @@
   </script>
   <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
+  <style>
+    #loading {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      top: 0;
+      z-index: 999;
+    }
+
+    #loading div {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 120px;
+      height: 120px;
+      background-image: url("icons/Icon-512.png");
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-size: cover;
+      animation: rotate ease-in-out infinite 2s;
+    }
+
+    @keyframes rotate {
+      100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+      }
+    }
+  </style>
 </head>
 <body>
-  <script>
-    window.addEventListener('load', function(ev) {
-      // Download main.dart.js
-      _flutter.loader.loadEntrypoint({
-        serviceWorker: {
-          serviceWorkerVersion: serviceWorkerVersion,
-        },
-        onEntrypointLoaded: function(engineInitializer) {
-          engineInitializer.initializeEngine().then(function(appRunner) {
-            appRunner.runApp();
-          });
-        }
-      });
+<div id="loading">
+  <div></div>
+</div>
+<script>
+  window.addEventListener('load', function (ev) {
+    // Download main.dart.js
+    _flutter.loader.loadEntrypoint({
+      serviceWorker: {
+        serviceWorkerVersion: serviceWorkerVersion,
+      },
+      onEntrypointLoaded: function (engineInitializer) {
+        engineInitializer.initializeEngine().then(function (appRunner) {
+          appRunner.runApp();
+          var loading = document.getElementById('loading');
+          if (loading) {
+            loading.remove();
+          }
+        });
+      }
     });
-  </script>
+  });
+</script>
 </body>
 </html>
