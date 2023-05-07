@@ -21,6 +21,8 @@ class JsonOption {
   final String? useTemplate;
   final bool? useDartFormat;
 
+  late final useBuiltIn = templatePath != null;
+
   late final template = () {
     final String template;
     if (templatePath != null) {

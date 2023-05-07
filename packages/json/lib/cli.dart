@@ -88,7 +88,7 @@ void _writeCode(File f, JsonOption option) {
     final code = render(
       contents,
       option.template,
-      dartFormat: option.useDartFormat ?? false,
+      dartFormat: (option.useDartFormat ?? false) || option.useBuiltIn,
     );
     final newPath = filePath.replaceAll(RegExp(r'.json$'), '.json.dart');
     File(newPath).writeAsStringSync(code);

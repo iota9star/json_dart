@@ -20,7 +20,7 @@ class JsonBuilder implements Builder {
     final code = render(
       contents,
       option.template,
-      dartFormat: option.useDartFormat ?? true,
+      dartFormat: (option.useDartFormat ?? false) || option.useBuiltIn,
     );
     final outputId = inputId.changeExtension('.json.dart');
     await buildStep.writeAsString(outputId, code);
