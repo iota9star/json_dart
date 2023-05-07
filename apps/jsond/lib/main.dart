@@ -20,7 +20,7 @@ import 'package:window_manager/window_manager.dart';
 import 'consts.dart';
 import 'internal/hive.dart';
 import 'notifiers.dart';
-import 'res/fonts.gen.dart';
+import 'styles.dart';
 import 'widget/ripple_tap.dart';
 
 part 'main.g.dart';
@@ -268,10 +268,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                     return HighlightView(
                       codes[index],
                       language: 'dart',
-                      textStyle: const TextStyle(
-                        fontFamily: FontFamily.agave,
-                        height: 1.5,
-                      ),
+                      textStyle: codeTextStyle,
                       theme: getCodeTheme(theme),
                       padding: index == 0
                           ? const EdgeInsets.only(
@@ -324,11 +321,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                       controller: _codeController,
                       focusNode: _focusNode,
                       wrap: true,
-                      textStyle: const TextStyle(
-                        fontFamily: FontFamily.agave,
-                        fontSize: 14.0,
-                        height: 1.5,
-                      ),
+                      textStyle: codeTextStyle,
                     ),
                   ),
                 ),
@@ -382,7 +375,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       return false;
     }
     try {
-      final def = JSON.fromString(codes);
+      final def = JSONDef.fromString(codes);
       _codeController.text = def.type.display;
       return true;
     } catch (e) {
@@ -719,10 +712,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                 return HighlightView(
                   codes[index],
                   language: 'handlebars',
-                  textStyle: const TextStyle(
-                    fontFamily: FontFamily.agave,
-                    height: 1.5,
-                  ),
+                  textStyle: codeTextStyle,
                   theme: getCodeTheme(theme),
                   padding: index == 0
                       ? const EdgeInsets.only(
@@ -901,11 +891,7 @@ Future<void> _showJsonError(BuildContext context, Object e) {
               ),
               child: Text(
                 e.toString(),
-                style: TextStyle(
-                  fontSize: 14.0,
-                  color: theme.colorScheme.error,
-                  fontFamily: FontFamily.agave,
-                ),
+                style: codeTextStyle.copyWith(color: theme.colorScheme.error),
               ),
             ),
           ],
@@ -967,7 +953,7 @@ class _TempEditorState extends State<TempEditor> {
   late final _nameEC = TextEditingController(text: widget.template?.name ?? '');
 
   static const _shortcuts = [
-    MapEntry('Defs', '{{# defs }}{{/ defs }}'),
+    MapEntry('Objs', '{{# objs }}{{/ objs }}'),
     MapEntry(
       'ObjName',
       '{{ obj_name }}',
@@ -1172,11 +1158,7 @@ class _TempEditorState extends State<TempEditor> {
                           controller: _jsonController,
                           wrap: true,
                           focusNode: _jsonFocusNode,
-                          textStyle: const TextStyle(
-                            fontFamily: FontFamily.agave,
-                            fontSize: 14.0,
-                            height: 1.5,
-                          ),
+                          textStyle: codeTextStyle,
                         ),
                       ),
                     ),
@@ -1241,10 +1223,7 @@ class _TempEditorState extends State<TempEditor> {
                       return HighlightView(
                         codes,
                         language: 'dart',
-                        textStyle: const TextStyle(
-                          fontFamily: FontFamily.agave,
-                          height: 1.5,
-                        ),
+                        textStyle: codeTextStyle,
                         theme: getCodeTheme(theme),
                         padding: const EdgeInsets.all(24.0),
                       );
@@ -1288,7 +1267,7 @@ class _TempEditorState extends State<TempEditor> {
   }
 
   Widget _buildCodePanel(ThemeData theme, bool limit) {
-    final child = GestureDetector(
+    final body = GestureDetector(
       onTap: () {
         if (!_tplFocusNode.hasFocus) {
           _tplFocusNode.requestFocus();
@@ -1300,11 +1279,7 @@ class _TempEditorState extends State<TempEditor> {
           controller: _templateController,
           wrap: true,
           focusNode: _tplFocusNode,
-          textStyle: const TextStyle(
-            fontFamily: FontFamily.agave,
-            fontSize: 14.0,
-            height: 1.5,
-          ),
+          textStyle: codeTextStyle,
         ),
       ),
     );
@@ -1315,12 +1290,12 @@ class _TempEditorState extends State<TempEditor> {
           return SizedBox(
             width: width,
             height: double.infinity,
-            child: child,
+            child: body,
           );
         },
       );
     }
-    return Expanded(child: child);
+    return Expanded(child: SizedBox.expand(child: body));
   }
 
   Widget _buildLeftPanel(
@@ -1480,7 +1455,7 @@ class _TempEditorState extends State<TempEditor> {
       return false;
     }
     try {
-      final def = JSON.fromString(codes);
+      final def = JSONDef.fromString(codes);
       _jsonController.text = def.type.display;
       return true;
     } catch (e) {

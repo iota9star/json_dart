@@ -1,5 +1,4 @@
 import 'package:collection/collection.dart';
-import 'package:meta/meta.dart';
 
 import 'antlr/JSON5BaseVisitor.dart';
 import 'antlr/JSON5Parser.dart';
@@ -11,21 +10,21 @@ class JVisitor extends JSON5BaseVisitor<JType> {
     RuleContextExtension.caches.clear();
   }
 
-  final _defs = <ObjKey, Def>{};
-  final _samePathDefs = <ObjKey, List<ObjectType>>{};
+  final _objs = <ObjKey, Obj>{};
+  final _samePathObjs = <ObjKey, List<ObjectType>>{};
 
-  List<Def> get defs {
+  List<Obj> get objs {
     final sames = _getDefSameFields();
-    for (final value in _defs.values) {
+    for (final value in _objs.values) {
       final key = value.key;
       final sfs = sames[key]!;
-      for (final field in value.fields) {
+      for (final field in value._fields) {
         if (!sfs.contains(field.key)) {
           field.update(nullable: true);
         }
       }
     }
-    return _defs.values.toList(growable: false);
+    return _objs.values.toList(growable: false);
   }
 
   @override
@@ -35,7 +34,7 @@ class JVisitor extends JSON5BaseVisitor<JType> {
 
   Map<ObjKey, Set<String>> _getDefSameFields() {
     final sames = <ObjKey, Set<String>>{};
-    for (final entry in _samePathDefs.entries) {
+    for (final entry in _samePathObjs.entries) {
       final objs = entry.value;
       final length = objs.length;
       if (length == 1) {
@@ -113,7 +112,7 @@ class JVisitor extends JSON5BaseVisitor<JType> {
       ctx.pairs().map((e) => visit(e)! as PairType).toList(growable: false),
     );
     final objKey = ObjKey(ctx.getPath());
-    _samePathDefs.putIfAbsent(objKey, () => []).add(objectType);
+    _samePathObjs.putIfAbsent(objKey, () => []).add(objectType);
     return objectType;
   }
 
@@ -124,7 +123,7 @@ class JVisitor extends JSON5BaseVisitor<JType> {
     final type = PairType(ctx, key, value);
     final path = ctx.parent!.getPath();
     final objKey = ObjKey(path);
-    final obj = _defs.putIfAbsent(objKey, () => Def(objKey));
+    final obj = _objs.putIfAbsent(objKey, () => Obj(objKey));
     final nullable = type.nullable;
     final field = Field(
       key: key,
@@ -132,21 +131,20 @@ class JVisitor extends JSON5BaseVisitor<JType> {
       nullable: nullable,
       types: {type},
     );
-    if (obj.fields.contains(field)) {
-      final exist = obj.fields.firstWhere((e) => e.key == key);
+    if (obj._fields.contains(field)) {
+      final exist = obj._fields.firstWhere((e) => e.key == key);
       exist.update(
         rawDef: nullable ? null : value.type,
         nullable: nullable,
         type: type,
       );
     } else {
-      obj.fields.add(field);
+      obj._fields.add(field);
     }
     return type;
   }
 }
 
-@immutable
 class ObjKey {
   ObjKey(this.path);
 
@@ -154,7 +152,12 @@ class ObjKey {
   late final key = path.join();
   late final name = path.toPascalCase();
 
+  String? customName;
+
+  String get display => customName ?? name;
+
   @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is ObjKey &&
@@ -162,25 +165,28 @@ class ObjKey {
           const ListEquality().equals(path, other.path);
 
   @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
   int get hashCode => const ListEquality().hash(path);
 }
 
-class Def {
-  Def(this.key);
+class Obj {
+  Obj(this.key);
 
   final ObjKey key;
-  final Set<Field> fields = {};
+  final Set<Field> _fields = {};
+
+  Set<Field> get fields => Set.unmodifiable(_fields);
 
   Map<String, dynamic> toJson() {
     return {
       'obj_path': key.path,
-      'obj_name': key.name,
-      'obj_fields_length': fields.length,
-      'obj_fields': fields
+      'obj_name': key.display,
+      'obj_fields_length': _fields.length,
+      'obj_fields': _fields
           .mapIndexed(
             (index, e) => e.toJson()
               ..['field_index'] = index
-              ..['field_is_last'] = index == fields.length - 1,
+              ..['field_is_last'] = index == _fields.length - 1,
           )
           .toList(growable: false),
     };
@@ -197,17 +203,17 @@ class Field {
 
   final String key;
   final Set<PairType> types;
-  FieldDef? rawDef;
+  FieldTypeDef? rawDef;
   bool nullable;
 
   late final def = rawDef ??
-      FieldDef(
+      FieldTypeDef(
         name: 'dynamic',
         type: FieldDefType.dynamic,
       );
 
   void update({
-    FieldDef? rawDef,
+    FieldTypeDef? rawDef,
     bool? nullable,
     PairType? type,
   }) {
@@ -216,7 +222,7 @@ class Field {
         this.rawDef?.type != FieldDefType.dynamic) {
       if (this.rawDef?.name != rawDef.name &&
           this.rawDef?.type != FieldDefType.dynamic) {
-        this.rawDef = FieldDef(name: 'dynamic', type: FieldDefType.dynamic);
+        this.rawDef = FieldTypeDef(name: 'dynamic', type: FieldDefType.dynamic);
       } else {
         this.rawDef = rawDef;
       }
@@ -269,7 +275,7 @@ class Field {
     return {
       'field_key': key,
       'field_type': def.type.name,
-      'field_type_name': def.name,
+      'field_type_name': def.display,
       'field_is_dynamic': def.type == FieldDefType.dynamic,
       'field_is_object': def.type == FieldDefType.object,
       'field_is_array': def.type == FieldDefType.array,

@@ -1,7 +1,7 @@
 const no_final =
 // language=handlebars
 '''
-{{# defs }}
+{{# objs }}
 class {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }} {
   {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }}();
 
@@ -58,13 +58,13 @@ class {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }} {
 
 }
 
-{{/ defs }}
+{{/ objs }}
       ''';
 
 const with_final =
 // language=handlebars
 '''
-{{# defs }}
+{{# objs }}
 class {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }} {
   {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }}({
 {{# obj_fields }}
@@ -127,14 +127,14 @@ class {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }} {
 
 }
 
-{{/ defs }}
+{{/ objs }}
       ''';
 
 
 const json_serializable =
 // language=handlebars
 r'''
-{{# defs }}
+{{# objs }}
 @JsonSerializable()
 class {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }} {
   {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }}({
@@ -181,13 +181,13 @@ class {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }} {
 
 }
 
-{{/ defs }}
+{{/ objs }}
       ''';
 
 const freezed =
 // language=handlebars
 r'''
-{{# defs }}
+{{# objs }}
 @freezed
 class {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }} with _${{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }} {
   const factory {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }}({
@@ -200,5 +200,5 @@ class {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }} with _${{# @pascal_ca
       => _${{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }}FromJson(json);
 }
 
-{{/ defs }}
+{{/ objs }}
       ''';

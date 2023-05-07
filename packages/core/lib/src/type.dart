@@ -14,7 +14,7 @@ abstract class JType<T extends RuleContext, R> {
 
   String get display => ctx.text;
 
-  FieldDef get type;
+  FieldTypeDef get type;
 
   String deser({bool nullable = false});
 }
@@ -32,7 +32,7 @@ class StringType<R> extends ValueType<R> {
   final String value;
 
   @override
-  late final FieldDef type = FieldDef(name: 'String');
+  late final FieldTypeDef type = FieldTypeDef(name: 'String');
 
   @override
   String deser({bool nullable = false}) {
@@ -49,7 +49,7 @@ class NumberType<R> extends ValueType<R> {
   bool get isInt => value is int;
 
   @override
-  late final FieldDef type = FieldDef(name: isInt ? 'int' : 'double');
+  late final FieldTypeDef type = FieldTypeDef(name: isInt ? 'int' : 'double');
 
   @override
   String deser({bool nullable = false}) {
@@ -64,7 +64,7 @@ class BooleanType<R> extends ValueType<R> {
   final bool value;
 
   @override
-  late final FieldDef type = FieldDef(name: 'bool');
+  late final FieldTypeDef type = FieldTypeDef(name: 'bool');
 
   @override
   String deser({bool nullable = false}) {
@@ -79,7 +79,7 @@ class NullableType<R> extends ValueType<R> {
   Object? get value => null;
 
   @override
-  late final FieldDef type = FieldDef(name: 'null');
+  late final FieldTypeDef type = FieldTypeDef(name: 'null');
 
   @override
   String deser({bool nullable = false}) {
@@ -92,9 +92,9 @@ class ArrayType<R> extends JType<ArrayContext, R> {
 
   final List<JType<RuleContext, R>> values;
 
-  late FieldDef childType = () {
+  FieldTypeDef get childType {
     if (values.isEmpty) {
-      return FieldDef(name: 'dynamic', type: FieldDefType.dynamic);
+      return FieldTypeDef(name: 'dynamic', type: FieldDefType.dynamic);
     }
     String? type;
     bool nullable = false;
@@ -104,13 +104,13 @@ class ArrayType<R> extends JType<ArrayContext, R> {
       } else {
         final nextType = value.type.name;
         if (type != null && nextType != type) {
-          return FieldDef(name: 'dynamic', type: FieldDefType.dynamic);
+          return FieldTypeDef(name: 'dynamic', type: FieldDefType.dynamic);
         }
         type = nextType;
       }
     }
-    return FieldDef(name: type!.nullable(nullable));
-  }();
+    return FieldTypeDef(name: type!.nullable(nullable));
+  }
 
   @override
   late final String display = () {
@@ -133,10 +133,10 @@ class ArrayType<R> extends JType<ArrayContext, R> {
   late final isPrimitive = !hasObj && !hasArray;
 
   @override
-  late final FieldDef type = FieldDef(
-    name: 'List<${childType.name}>',
-    type: FieldDefType.array,
-  );
+  FieldTypeDef get type => FieldTypeDef(
+        name: 'List<${childType.name}>',
+        type: FieldDefType.array,
+      );
 
   @override
   String deser({bool nullable = false}) {
@@ -178,7 +178,7 @@ class PairType<T extends JType<RuleContext, R>, R>
   bool get nullable => value is NullableType;
 
   @override
-  FieldDef get type => value.type;
+  FieldTypeDef get type => value.type;
 
   @override
   bool operator ==(Object other) =>
@@ -204,13 +204,13 @@ class ObjectType<R> extends JType<ObjectContext, R> {
 
   final List<PairType<JType<RuleContext, R>, R>> pairs;
 
-  late final fields =
+  late final List<MapEntry<String, FieldTypeDef>> fields =
       pairs.map((e) => MapEntry(e.key, e.type)).toList(growable: false);
 
   @override
-  late final FieldDef type = () {
+  late final FieldTypeDef type = () {
     final path = ctx.getPath();
-    return FieldDef(
+    return FieldTypeDef(
       name: path.toPascalCase(),
       path: path,
       type: FieldDefType.object,
@@ -237,8 +237,8 @@ class ObjectType<R> extends JType<ObjectContext, R> {
   }();
 }
 
-class FieldDef {
-  FieldDef({
+class FieldTypeDef {
+  FieldTypeDef({
     required this.name,
     this.path,
     this.type = FieldDefType.primitive,
@@ -248,9 +248,13 @@ class FieldDef {
   final List<String>? path;
   final FieldDefType type;
 
+  String? customName;
+
+  String? get display => customName ?? name;
+
   Map<String, dynamic> toJson() {
     return {
-      'name': name,
+      'name': display,
       'path': path,
       'type': type.name,
     };

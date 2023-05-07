@@ -5,10 +5,10 @@ import 'package:recase/recase.dart';
 import 'json.dart';
 import 'type.dart';
 
-String renderDefs(String template, List<Map> defs) {
+String renderObjs(String template, List<Map> objs) {
   final tpl = Template(template, lenient: true);
   return tpl.renderString({
-    'defs': defs,
+    'objs': objs,
     '@deser_field': (LambdaContext ctx) => ctx
         .lookup('field_deser')
         .toString()
@@ -30,10 +30,10 @@ String render(
   String template, {
   bool dartFormat = false,
 }) {
-  final def = JSON.fromString(json);
-  final code = renderDefs(
+  final ret = JSONDef.fromString(json);
+  final code = renderObjs(
     template,
-    def.defs.map((e) => e.toJson()).toList(growable: false),
+    ret.toMaps(),
   );
   if (dartFormat) {
     return DartFormatter(fixes: StyleFix.all).format(code);

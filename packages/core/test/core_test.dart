@@ -8,8 +8,8 @@ void main() {
   group('A group of tests', () {
     test('templates', () async {
       final dir = '${Directory.current.path}/test/';
-      final def = await JSON.fromPath('$dir/test.json');
-      final defs = def.defs.map((e) => e.toJson()).toList(growable: false);
+      final def = await JSONDef.fromPath('$dir/test.json');
+      final objs = def.toMaps();
       final tpls = [
         const MapEntry('no_final', no_final),
         const MapEntry('with_final', with_final),
@@ -17,7 +17,7 @@ void main() {
         const MapEntry('freezed', freezed),
       ];
       for (final tpl in tpls) {
-        final rendered = renderDefs(tpl.value, defs);
+        final rendered = renderObjs(tpl.value, objs);
         File('$dir/${tpl.key}.dart').writeAsStringSync(rendered);
         final format = DartFormatter(fixes: StyleFix.all).format(rendered);
         File('$dir/${tpl.key}.dart').writeAsStringSync(format);

@@ -1,14 +1,41 @@
 import 'dart:convert';
 
 import 'package:antlr4/antlr4.dart';
+import 'package:collection/collection.dart';
 
 import 'antlr/JSON5Lexer.dart';
 import 'antlr/JSON5Parser.dart';
 import 'type.dart';
 import 'visitor.dart';
 
-class JSON {
-  const JSON._();
+class JSONDef {
+  JSONDef(this.type, this._objs);
+
+  final JType type;
+  final List<Obj> _objs;
+
+  late final objs = List<Obj>.unmodifiable(_objs);
+
+  bool get isObject => type is ObjectType;
+
+  bool get isArray => type is ArrayType;
+
+  void updateObjName(Obj obj, String? newObjName) {
+    final key = obj.key;
+    key.customName = newObjName;
+    for (final item in _objs) {
+      for (final field in item.fields) {
+        final path = field.def.path;
+        if (const ListEquality().equals(path, key.path)) {
+          field.def.customName = newObjName;
+        }
+      }
+    }
+  }
+
+  List<Map<String, dynamic>> toMaps() {
+    return _objs.map((e) => e.toJson()).toList(growable: false);
+  }
 
   static JSONDef fromString<T>(String str) {
     return fromCharStream(InputStream.fromString(str));
@@ -53,13 +80,6 @@ class JSON {
     parser.buildParseTree = true;
     final visitor = JVisitor();
     final type = visitor.visit(parser.json5())!;
-    return JSONDef(type, visitor.defs);
+    return JSONDef(type, visitor.objs);
   }
-}
-
-class JSONDef {
-  JSONDef(this.type, this.defs);
-
-  final JType type;
-  final List<Def> defs;
 }
