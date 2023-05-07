@@ -28,9 +28,9 @@ const testJson =
 const defaultTemplate =
 // language=handlebars
     '''
-{{# defs }}
+{{# objs }}
   {{# obj_fields }}
     // {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }}
   {{/ obj_fields }}
-{{/ defs }}
+{{/ objs }}
     ''';

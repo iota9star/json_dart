@@ -78,7 +78,7 @@ class MyApp extends StatelessWidget {
       builder: (context, box, child) {
         final mode = box.get('theme_mode', defaultValue: ThemeMode.system.name);
         final color = Color(
-          box.get('theme_color', defaultValue: Colors.blueAccent.value),
+          box.get('theme_color', defaultValue: Colors.purple.value),
         );
         return MaterialApp(
           title: 'JSOND',
@@ -807,7 +807,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                         final color = Color(
                           box.get(
                             'theme_color',
-                            defaultValue: Colors.blueAccent.value,
+                            defaultValue: Colors.purple.value,
                           ),
                         );
                         return ColorPicker(
