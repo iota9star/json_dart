@@ -22,7 +22,9 @@ class JsonBuilder implements Builder {
       option.template,
       dartFormat: (option.useDartFormat ?? false) || option.useBuiltIn,
     );
-    final outputId = inputId.changeExtension('.json.dart');
+    final json = inputId.extension.endsWith('json');
+    final outputId =
+        inputId.changeExtension(json ? '.json.dart' : '.json5.dart');
     await buildStep.writeAsString(outputId, code);
   }
 
@@ -30,6 +32,7 @@ class JsonBuilder implements Builder {
   Map<String, List<String>> get buildExtensions {
     return const {
       '.json': ['.json.dart'],
+      '.json5': ['.json5.dart'],
     };
   }
 }

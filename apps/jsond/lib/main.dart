@@ -78,7 +78,7 @@ class MyApp extends StatelessWidget {
       builder: (context, box, child) {
         final mode = box.get('theme_mode', defaultValue: ThemeMode.system.name);
         final color = Color(
-          box.get('theme_color', defaultValue: Colors.purple.value),
+          box.get('theme_color', defaultValue: Colors.pink.value),
         );
         return MaterialApp(
           title: 'JSOND',
@@ -226,25 +226,25 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
   }
 
   Widget _buildDragBar() {
-    return MouseRegion(
-      cursor: SystemMouseCursors.resizeColumn,
-      child: GestureDetector(
-        onHorizontalDragUpdate: (d) {
-          final oldWidth = _jsonContentWidth.value;
-          if (oldWidth <= 300.0 && d.delta.dx < 0) {
-            _jsonContentWidth.value = 300.0;
-            return;
-          }
-          final newValue = oldWidth + d.delta.dx;
-          if (mediaQuery.size.width - newValue - 240.0 < 20.0) {
-            return;
-          }
-          _jsonContentWidth.value = newValue;
-        },
-        child: Container(
-          width: 20.0,
-          height: double.infinity,
-          alignment: Alignment.center,
+    return Container(
+      width: 20.0,
+      height: double.infinity,
+      alignment: Alignment.center,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.resizeColumn,
+        child: GestureDetector(
+          onHorizontalDragUpdate: (d) {
+            final oldWidth = _jsonContentWidth.value;
+            if (oldWidth <= 300.0 && d.delta.dx < 0) {
+              _jsonContentWidth.value = 300.0;
+              return;
+            }
+            final newValue = oldWidth + d.delta.dx;
+            if (mediaQuery.size.width - newValue - 240.0 < 20.0) {
+              return;
+            }
+            _jsonContentWidth.value = newValue;
+          },
           child: const Icon(
             Icons.drag_indicator_rounded,
             size: 16.0,
@@ -344,7 +344,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                         Icons.format_indent_increase_rounded,
                         size: 16.0,
                       ),
-                      label: const Text('format'),
+                      label: const Text('Format'),
                     ),
                     ElevatedButton.icon(
                       onPressed: () {
@@ -355,7 +355,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                         Icons.clear_all_rounded,
                         size: 16.0,
                       ),
-                      label: const Text('clear'),
+                      label: const Text('Clear'),
                     ),
                   ],
                 ),
@@ -807,7 +807,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                         final color = Color(
                           box.get(
                             'theme_color',
-                            defaultValue: Colors.purple.value,
+                            defaultValue: Colors.pink.value,
                           ),
                         );
                         return ColorPicker(
@@ -1191,7 +1191,7 @@ class _TempEditorState extends State<TempEditor> {
                             Icons.format_indent_increase_rounded,
                             size: 16.0,
                           ),
-                          label: const Text('format'),
+                          label: const Text('Format'),
                         ),
                         ElevatedButton.icon(
                           onPressed: () {
@@ -1202,7 +1202,7 @@ class _TempEditorState extends State<TempEditor> {
                             Icons.clear_all_rounded,
                             size: 16.0,
                           ),
-                          label: const Text('clear'),
+                          label: const Text('Clear'),
                         ),
                       ],
                     ),
@@ -1238,25 +1238,25 @@ class _TempEditorState extends State<TempEditor> {
   }
 
   Widget _buildDragBar() {
-    return MouseRegion(
-      cursor: SystemMouseCursors.resizeColumn,
-      child: GestureDetector(
-        onHorizontalDragUpdate: (d) {
-          final oldWidth = _jsonContentWidth.value;
-          if (oldWidth <= 300.0 && d.delta.dx < 0) {
-            _jsonContentWidth.value = 300.0;
-            return;
-          }
-          final newValue = oldWidth + d.delta.dx;
-          if (mediaQuery.size.width - newValue - 280.0 < 20.0) {
-            return;
-          }
-          _jsonContentWidth.value = newValue;
-        },
-        child: Container(
-          width: 20.0,
-          height: double.infinity,
-          alignment: Alignment.center,
+    return Container(
+      width: 20.0,
+      height: double.infinity,
+      alignment: Alignment.center,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.resizeColumn,
+        child: GestureDetector(
+          onHorizontalDragUpdate: (d) {
+            final oldWidth = _jsonContentWidth.value;
+            if (oldWidth <= 300.0 && d.delta.dx < 0) {
+              _jsonContentWidth.value = 300.0;
+              return;
+            }
+            final newValue = oldWidth + d.delta.dx;
+            if (mediaQuery.size.width - newValue - 280.0 < 20.0) {
+              return;
+            }
+            _jsonContentWidth.value = newValue;
+          },
           child: const Icon(
             Icons.drag_indicator_rounded,
             size: 16.0,

@@ -82,7 +82,7 @@ Future<void> cli(List<String> arguments) async {
 
 void _writeCode(File f, JsonOption option) {
   final filePath = f.path;
-  if (filePath.endsWith('.json')) {
+  if (filePath.endsWith('.json') || filePath.endsWith('json5')) {
     final contents = f.readAsStringSync();
     filePath.$debug(tag: '.json found');
     final code = render(
@@ -90,7 +90,9 @@ void _writeCode(File f, JsonOption option) {
       option.template,
       dartFormat: (option.useDartFormat ?? false) || option.useBuiltIn,
     );
-    final newPath = filePath.replaceAll(RegExp(r'.json$'), '.json.dart');
+    final newPath = filePath
+        .replaceAll(RegExp(r'.json$'), '.json.dart')
+        .replaceAll(RegExp(r'.json5$'), '.json5.dart');
     File(newPath).writeAsStringSync(code);
     newPath.$debug(tag: '  generated');
   }
