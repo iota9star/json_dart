@@ -18,6 +18,7 @@ import 'package:universal_platform/universal_platform.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'consts.dart';
+import 'internal/extension.dart';
 import 'internal/hive.dart';
 import 'notifiers.dart';
 import 'styles.dart';
@@ -168,10 +169,10 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
   final _codes = ValueNotifier<List<String>>([]);
   final _jsonContentWidth = ValueNotifier(() {
     final width = mediaQuery.size.width - 240.0 - 20.0;
-    if (width > 600.0) {
+    if (width > 800.0) {
       return width / 2.0;
     }
-    return 300.0;
+    return 400.0;
   }());
   late final _selected = ValueNotifier(_builtInTemplates.first);
   late final _codeController =
@@ -235,8 +236,8 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
         child: GestureDetector(
           onHorizontalDragUpdate: (d) {
             final oldWidth = _jsonContentWidth.value;
-            if (oldWidth <= 300.0 && d.delta.dx < 0) {
-              _jsonContentWidth.value = 300.0;
+            if (oldWidth <= 400.0 && d.delta.dx < 0) {
+              _jsonContentWidth.value = 400.0;
               return;
             }
             final newValue = oldWidth + d.delta.dx;
@@ -345,6 +346,17 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                         size: 16.0,
                       ),
                       label: const Text('Format'),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        final codes = _codeController.text.trim();
+                        _codeController.text = codes.unicodeToRawString();
+                      },
+                      icon: const Icon(
+                        Icons.transform,
+                        size: 16.0,
+                      ),
+                      label: const Text('Escape'),
                     ),
                     ElevatedButton.icon(
                       onPressed: () {
@@ -1036,10 +1048,10 @@ class _TempEditorState extends State<TempEditor> {
   final _jsonFocusNode = FocusNode();
   final _jsonContentWidth = ValueNotifier(() {
     final width = mediaQuery.size.width - 240.0 - 20.0;
-    if (width > 600.0) {
+    if (width > 800.0) {
       return width / 2.0;
     }
-    return 300.0;
+    return 400.0;
   }());
 
   @override
@@ -1195,6 +1207,17 @@ class _TempEditorState extends State<TempEditor> {
                         ),
                         ElevatedButton.icon(
                           onPressed: () {
+                            final codes = _jsonController.text.trim();
+                            _jsonController.text = codes.unicodeToRawString();
+                          },
+                          icon: const Icon(
+                            Icons.transform,
+                            size: 16.0,
+                          ),
+                          label: const Text('Escape'),
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: () {
                             _jsonController.text = '';
                             _codes.value = '';
                           },
@@ -1247,8 +1270,8 @@ class _TempEditorState extends State<TempEditor> {
         child: GestureDetector(
           onHorizontalDragUpdate: (d) {
             final oldWidth = _jsonContentWidth.value;
-            if (oldWidth <= 300.0 && d.delta.dx < 0) {
-              _jsonContentWidth.value = 300.0;
+            if (oldWidth <= 400.0 && d.delta.dx < 0) {
+              _jsonContentWidth.value = 400.0;
               return;
             }
             final newValue = oldWidth + d.delta.dx;
