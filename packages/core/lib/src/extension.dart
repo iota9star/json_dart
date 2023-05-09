@@ -1,4 +1,5 @@
 import 'package:antlr4/antlr4.dart';
+import 'package:collection/collection.dart';
 import 'package:recase/recase.dart';
 
 import 'antlr/JSON5Parser.dart';
@@ -39,11 +40,14 @@ extension ListString on List<String> {
       return 'Obj';
     }
     return path
-        .map((e) {
+        .mapIndexed((index, e) {
           if (e == ARRAY_CHAR) {
+            if (index == 0) {
+              return 'Obj';
+            }
             return 'Item';
           } else if (e == OBJECT_CHAR) {
-            return 'Obj';
+            return '_';
           }
           return e;
         })
