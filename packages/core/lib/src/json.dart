@@ -20,6 +20,25 @@ class JSONDef {
 
   bool get isArray => type is ArrayType;
 
+  void keepUniqueObjName() {
+    final keys = <String, int>{};
+    for (final obj in _objs) {
+      final name = obj.key.display;
+      if (keys.containsKey(name)) {
+        final i = keys[name]!;
+        final next = i + 1;
+        keys[name] = next;
+        updateObjName(obj, '$name$next');
+      } else {
+        keys[name] = 0;
+      }
+    }
+    final hasConflict = keys.values.any((e) => e > 0);
+    if (hasConflict) {
+      keepUniqueObjName();
+    }
+  }
+
   void updateObjName(Obj obj, String? newObjName) {
     final key = obj.key;
     key.customName = newObjName;
@@ -80,6 +99,6 @@ class JSONDef {
     parser.buildParseTree = true;
     final visitor = JVisitor();
     final type = visitor.visit(parser.json5())!;
-    return JSONDef(type, visitor.objs);
+    return JSONDef(type, visitor.objs)..keepUniqueObjName();
   }
 }

@@ -6,10 +6,8 @@ import 'antlr/JSON5Parser.dart';
 
 extension StringExtension on String {
   String get noQuot {
-    if (startsWith('"') && endsWith('"')) {
-      return substring(1, length - 1);
-    }
-    if (startsWith("'") && endsWith("'")) {
+    if ((startsWith('"') && endsWith('"')) ||
+        (startsWith("'") && endsWith("'"))) {
       return substring(1, length - 1);
     }
     return this;
@@ -52,6 +50,8 @@ extension ListString on List<String> {
           return e;
         })
         .join('_')
+        .pascalCase
+        // twice `pascalCase` keep same result
         .pascalCase;
   }
 }
