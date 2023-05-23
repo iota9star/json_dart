@@ -19,7 +19,7 @@ void main() {
       ];
       for (final tpl in tpls) {
         final rendered =
-            renderObjs(tpl.value, objs, keywords: dartKeywordsAndInternalTypes);
+            renderObjs(tpl.value, objs, keywords: builtInDartKeywords);
         File('$dir/${tpl.key}.dart').writeAsStringSync(rendered);
         final format = DartFormatter(fixes: StyleFix.all).format(rendered);
         File('$dir/${tpl.key}.dart').writeAsStringSync(format);

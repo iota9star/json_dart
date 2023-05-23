@@ -40,7 +40,7 @@ String renderObjs(
 String render(
   String json,
   String template, {
-  Set<String> keywords = dartKeywordsAndInternalTypes,
+  Set<String> keywords = builtInDartKeywords,
   Map<String, String> symbols = builtInSymbols,
   bool dartFormat = false,
 }) {

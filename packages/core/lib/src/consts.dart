@@ -31,7 +31,7 @@ const builtInSymbols = {
   '}': 'rcb'
 };
 
-const dartKeywordsAndInternalTypes = <String>{
+const builtInDartKeywords = <String>{
   'int',
   'double',
   'bool',
