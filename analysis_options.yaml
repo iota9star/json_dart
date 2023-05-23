@@ -13,7 +13,6 @@ analyzer:
     - packages/**/lib/**.g.dart
     - packages/**/lib/**.freezed.dart
     - packages/**/antlr/**.dart
-    - packages/**/lib/**.idl.dart
 
 linter:
   rules:

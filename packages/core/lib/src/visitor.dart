@@ -37,42 +37,21 @@ class JVisitor extends JSON5BaseVisitor<JType> {
     for (final entry in _samePathObjs.entries) {
       final objs = entry.value;
       final length = objs.length;
-      if (length == 1) {
-        sames[entry.key] = objs.first.fields.map((e) => e.key).toSet();
-      } else {
-        final keys = <String>{};
-        final noc = <String>{};
-        outer:
-        for (int index = 0; index < length; index++) {
-          if (index < length - 1) {
-            final curr = objs[index];
-            final next = objs[index + 1];
-            int sc = 0;
-            for (final field in curr.fields) {
-              final key = field.key;
-              final exist = next.fields.any((e) => e.key == key);
-              if (exist) {
-                if (sc > 0 && !keys.contains(key)) {
-                  noc.add(key);
-                  keys.remove(key);
-                } else {
-                  keys.add(key);
-                  sc++;
-                }
-              } else {
-                noc.add(key);
-                keys.remove(key);
-              }
-            }
-            if (sc == 0) {
-              keys.clear();
-              break outer;
-            }
+      final keys = objs.first.pairs.map((e) => e.key).toSet();
+      if (length > 1) {
+        for (int i = 1; i < length; ++i) {
+          final nextKeys = objs[i].pairs.map((e) => e.key).toSet();
+          if (nextKeys.isEmpty) {
+            keys.clear();
+            break;
+          }
+          keys.retainAll(nextKeys);
+          if (keys.isEmpty) {
+            break;
           }
         }
-        keys.removeAll(noc);
-        sames[entry.key] = keys;
       }
+      sames[entry.key] = keys;
     }
     return sames;
   }
@@ -127,14 +106,14 @@ class JVisitor extends JSON5BaseVisitor<JType> {
     final nullable = type.nullable;
     final field = Field(
       key: key,
-      rawDef: nullable ? null : value.type,
+      rawDef: nullable ? null : value.typing(),
       nullable: nullable,
       types: {type},
     );
     if (obj._fields.contains(field)) {
       final exist = obj._fields.firstWhere((e) => e.key == key);
       exist.update(
-        rawDef: nullable ? null : value.type,
+        rawDef: nullable ? null : value.typing(),
         nullable: nullable,
         type: type,
       );
@@ -150,11 +129,15 @@ class ObjKey {
 
   final List<String> path;
   late final key = path.join();
-  late final name = path.toPascalCase();
 
   String? customName;
 
-  String get display => customName ?? name;
+  String naming({Map<String, String>? symbols}) {
+    if (customName != null && customName!.isNotEmpty) {
+      return customName!;
+    }
+    return path.toPascalCase(symbols: symbols);
+  }
 
   @override
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
@@ -177,14 +160,14 @@ class Obj {
 
   Set<Field> get fields => Set.unmodifiable(_fields);
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toJson({Map<String, String>? symbols}) {
     return {
       'obj_path': key.path,
-      'obj_name': key.display,
+      'obj_name': key.naming(symbols: symbols),
       'obj_fields_length': _fields.length,
       'obj_fields': _fields
           .mapIndexed(
-            (index, e) => e.toJson()
+            (index, e) => e.toJson(symbols: symbols)
               ..['field_index'] = index
               ..['field_is_last'] = index == _fields.length - 1,
           )
@@ -209,7 +192,7 @@ class Field {
   late final def = rawDef ??
       FieldTypeDef(
         name: 'dynamic',
-        type: FieldDefType.dynamic,
+        type: FieldType.dynamic,
       );
 
   void update({
@@ -218,11 +201,11 @@ class Field {
     PairType? type,
   }) {
     if (rawDef != null &&
-        rawDef.type != FieldDefType.dynamic &&
-        this.rawDef?.type != FieldDefType.dynamic) {
+        rawDef.type != FieldType.dynamic &&
+        this.rawDef?.type != FieldType.dynamic) {
       if (this.rawDef?.name != rawDef.name &&
-          this.rawDef?.type != FieldDefType.dynamic) {
-        this.rawDef = FieldTypeDef(name: 'dynamic', type: FieldDefType.dynamic);
+          this.rawDef?.type != FieldType.dynamic) {
+        this.rawDef = FieldTypeDef(name: 'dynamic', type: FieldType.dynamic);
       } else {
         this.rawDef = rawDef;
       }
@@ -245,14 +228,14 @@ class Field {
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
   int get hashCode => key.hashCode;
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toJson({Map<String, String>? symbols}) {
     final array = types.firstWhereOrNull(
       (e) {
         final value = e.value;
         if (value is! ArrayType) {
           return false;
         }
-        return !value.isPrimitive;
+        return !value.isPrimitive(symbols);
       },
     );
     final obj = types.firstWhereOrNull((e) => e.value is ObjectType);
@@ -272,14 +255,28 @@ class Field {
       }
     }
     deser ??= JType.ph;
+    String withoutSymbolKey;
+    if (symbols != null) {
+      withoutSymbolKey = key.replaceAllMapped(RegExp(r'[^a-zA-Z\d]'), (match) {
+        final group = match.group(0)!;
+        if (symbols.containsKey(group)) {
+          return '_${symbols[group]!}_';
+        }
+        return group;
+      });
+    } else {
+      withoutSymbolKey = key;
+    }
+    final typeName = def.naming(symbols: symbols);
     return {
       'field_key': key,
+      'field_without_symbol_key': withoutSymbolKey,
       'field_type': def.type.name,
-      'field_type_name': def.display,
-      'field_is_dynamic': def.type == FieldDefType.dynamic,
-      'field_is_object': def.type == FieldDefType.object,
-      'field_is_array': def.type == FieldDefType.array,
-      'field_is_primitive': def.type == FieldDefType.primitive,
+      'field_type_name': typeName,
+      'field_is_dynamic': def.type == FieldType.dynamic,
+      'field_is_object': def.type == FieldType.object,
+      'field_is_array': def.type == FieldType.array,
+      'field_is_primitive': def.type == FieldType.primitive,
       'field_is_complex': deser != JType.ph,
       'field_nullable': nullable,
       'field_deser': deser,

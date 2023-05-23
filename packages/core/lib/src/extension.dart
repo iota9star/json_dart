@@ -32,7 +32,7 @@ extension StringExtension on String {
 }
 
 extension ListString on List<String> {
-  String toPascalCase() {
+  String toPascalCase({Map<String, String>? symbols}) {
     final path = this;
     if (path.isEmpty) {
       return 'Obj';
@@ -46,6 +46,15 @@ extension ListString on List<String> {
             return 'Item';
           } else if (e == OBJECT_CHAR) {
             return '_';
+          }
+          if (symbols != null) {
+            return e.replaceAllMapped(RegExp(r'[^a-zA-Z\d]'), (match) {
+              final group = match.group(0)!;
+              if (symbols.containsKey(group)) {
+                return '_${symbols[group]!}_';
+              }
+              return group;
+            });
           }
           return e;
         })

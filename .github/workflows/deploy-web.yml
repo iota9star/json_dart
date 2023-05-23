@@ -10,6 +10,7 @@ on:
     paths:
       - 'apps/jsond/lib/**'
       - 'apps/jsond/web/**'
+      - 'packages/core/**'
     branches:
       - "main"
 jobs:

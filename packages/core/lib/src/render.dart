@@ -2,10 +2,15 @@ import 'package:dart_style/dart_style.dart';
 import 'package:mustache_template/mustache_template.dart';
 import 'package:recase/recase.dart';
 
-import 'json.dart';
+import '../core.dart';
+import 'consts.dart';
 import 'type.dart';
 
-String renderObjs(String template, List<Map> objs) {
+String renderObjs(
+  String template,
+  List<Map> objs, {
+  Set<String>? keywords,
+}) {
   final tpl = Template(template, lenient: true);
   return tpl.renderString({
     'objs': objs,
@@ -13,6 +18,13 @@ String renderObjs(String template, List<Map> objs) {
         .lookup('field_deser')
         .toString()
         .replaceAll(JType.ph, ctx.renderString()),
+    '@keywords': (LambdaContext ctx) {
+      final str = ctx.renderString();
+      if (keywords != null && keywords.contains(str)) {
+        return '${str}_';
+      }
+      return str;
+    },
     '@pascal_case': (LambdaContext ctx) => ctx.renderString().pascalCase,
     '@camel_case': (LambdaContext ctx) => ctx.renderString().camelCase,
     '@constant_case': (LambdaContext ctx) => ctx.renderString().constantCase,
@@ -28,12 +40,15 @@ String renderObjs(String template, List<Map> objs) {
 String render(
   String json,
   String template, {
+  Set<String> keywords = dartKeywordsAndInternalTypes,
+  Map<String, String> symbols = builtInSymbols,
   bool dartFormat = false,
 }) {
-  final ret = JSONDef.fromString(json);
+  final ret = JSONDef.fromString(json, symbols: symbols);
   final code = renderObjs(
     template,
-    ret.toMaps(),
+    ret.toJson(symbols: symbols),
+    keywords: keywords,
   );
   if (dartFormat) {
     return DartFormatter(fixes: StyleFix.all).format(code);
