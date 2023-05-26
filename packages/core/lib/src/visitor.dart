@@ -263,9 +263,8 @@ class Field {
     if (symbols != null) {
       withoutSymbolKey = key.replaceAllMapped(RegExp(r'^[^a-zA-Z\d]'), (match) {
         final group = match.group(0)!;
-        group.$debug();
         if (symbols.containsKey(group)) {
-          return '_${symbols[group]!}_'..$debug();
+          return '_${symbols[group]!}_';
         }
         return group;
       });
