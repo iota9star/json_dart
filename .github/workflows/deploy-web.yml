@@ -30,7 +30,7 @@ jobs:
       - name: Build Web
         run: |
           cd apps/jsond
-          flutter build web --release --web-renderer canvaskit
+          flutter build web --release --web-renderer canvaskit --tree-shake-icons
           dart scripts/web.dart
       - name: Deploy
         uses: amondnet/vercel-action@v25
