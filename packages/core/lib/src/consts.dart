@@ -1,7 +1,6 @@
 const builtInSymbols = {
   '.': 'dot',
   '+': 'plus',
-  '-': 'minus',
   '*': 'mul',
   '/': 'div',
   '%': 'mod',

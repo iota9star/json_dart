@@ -23,6 +23,8 @@ scripts:
   upgrade: melos exec -- dart pub upgrade --null-safety
   analyze:
     exec: dart analyze .
+  publish: melos publish --no-dry-run --ignore="*example*" --yes
+  dry-run: melos publish --dry-run --ignore="*example*"
 
 ide:
   intellij:

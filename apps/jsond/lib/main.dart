@@ -257,43 +257,41 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
 
   Widget _buildCodePanel(ThemeData theme) {
     return Expanded(
-      child: Column(
-        children: [
-          Expanded(
-            child: ValueListenableBuilder(
-              valueListenable: _codes,
-              builder: (context, codes, child) {
-                final length = codes.length;
-                return ListView.builder(
-                  itemBuilder: (context, index) {
-                    return HighlightView(
-                      codes[index],
-                      language: 'dart',
-                      textStyle: codeTextStyle,
-                      theme: getCodeTheme(theme),
-                      padding: index == 0
+      child: Container(
+        color: theme.colorScheme.onSecondary,
+        height: double.infinity,
+        child: ValueListenableBuilder(
+          valueListenable: _codes,
+          builder: (context, codes, child) {
+            final length = codes.length;
+            return ListView.builder(
+              itemBuilder: (context, index) {
+                return HighlightView(
+                  codes[index],
+                  language: 'dart',
+                  textStyle: codeTextStyle,
+                  theme: getCodeTheme(theme),
+                  padding: index == 0
+                      ? const EdgeInsets.only(
+                          left: 24.0,
+                          right: 24.0,
+                          top: 24.0,
+                        )
+                      : index == length - 1
                           ? const EdgeInsets.only(
                               left: 24.0,
                               right: 24.0,
-                              top: 24.0,
+                              bottom: 24.0,
                             )
-                          : index == length - 1
-                              ? const EdgeInsets.only(
-                                  left: 24.0,
-                                  right: 24.0,
-                                  bottom: 24.0,
-                                )
-                              : const EdgeInsets.symmetric(
-                                  horizontal: 24.0,
-                                ),
-                    );
-                  },
-                  itemCount: length,
+                          : const EdgeInsets.symmetric(
+                              horizontal: 24.0,
+                            ),
                 );
               },
-            ),
-          ),
-        ],
+              itemCount: length,
+            );
+          },
+        ),
       ),
     );
   }
@@ -778,7 +776,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                       'Theme Mode',
                       style: theme.textTheme.titleMedium,
                     ),
-                    const SizedBox(height: 8.0),
+                    const SizedBox(height: 12.0),
                     ValueListenableBuilder(
                       valueListenable:
                           Hives.settingBox.listenable(keys: ['theme_mode']),
@@ -811,7 +809,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                       'Theme Color',
                       style: theme.textTheme.titleMedium,
                     ),
-                    const SizedBox(height: 8.0),
+                    const SizedBox(height: 12.0),
                     ValueListenableBuilder(
                       valueListenable:
                           Hives.settingBox.listenable(keys: ['theme_color']),
@@ -826,14 +824,15 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                           color: color,
                           padding: EdgeInsets.zero,
                           pickersEnabled: const <ColorPickerType, bool>{
-                            ColorPickerType.both: false,
-                            ColorPickerType.primary: true,
-                            ColorPickerType.accent: true,
+                            ColorPickerType.both: true,
+                            ColorPickerType.primary: false,
+                            ColorPickerType.accent: false,
                             ColorPickerType.bw: false,
                             ColorPickerType.custom: true,
                             ColorPickerType.wheel: true,
                           },
                           pickerTypeTextStyle: theme.textTheme.labelLarge,
+                          enableShadesSelection: false,
                           onColorChanged: (v) {
                             box.put('theme_color', v.value);
                           },
