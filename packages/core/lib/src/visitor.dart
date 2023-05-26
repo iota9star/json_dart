@@ -1,5 +1,6 @@
 import 'package:collection/collection.dart';
 
+import '../core.dart';
 import 'antlr/JSON5BaseVisitor.dart';
 import 'antlr/JSON5Parser.dart';
 import 'extension.dart';
@@ -104,16 +105,17 @@ class JVisitor extends JSON5BaseVisitor<JType> {
     final objKey = ObjKey(path);
     final obj = _objs.putIfAbsent(objKey, () => Obj(objKey));
     final nullable = type.nullable;
+    final def = value.typing();
     final field = Field(
       key: key,
-      rawDef: nullable ? null : value.typing(),
+      rawDef: nullable ? null : def,
       nullable: nullable,
       types: {type},
     );
     if (obj._fields.contains(field)) {
       final exist = obj._fields.firstWhere((e) => e.key == key);
       exist.update(
-        rawDef: nullable ? null : value.typing(),
+        newDef: nullable ? null : def,
         nullable: nullable,
         type: type,
       );
@@ -196,18 +198,20 @@ class Field {
       );
 
   void update({
-    FieldTypeDef? rawDef,
+    FieldTypeDef? newDef,
     bool? nullable,
     PairType? type,
   }) {
-    if (rawDef != null &&
-        rawDef.type != FieldType.dynamic &&
-        this.rawDef?.type != FieldType.dynamic) {
-      if (this.rawDef?.name != rawDef.name &&
-          this.rawDef?.type != FieldType.dynamic) {
-        this.rawDef = FieldTypeDef(name: 'dynamic', type: FieldType.dynamic);
+    final curr = rawDef;
+    if (newDef != null &&
+        newDef.type != FieldType.dynamic &&
+        curr?.type != FieldType.dynamic) {
+      if (curr != null) {
+        rawDef = curr.name != newDef.name && curr.type != FieldType.dynamic
+            ? FieldTypeDef(name: 'dynamic', type: FieldType.dynamic)
+            : newDef;
       } else {
-        this.rawDef = rawDef;
+        rawDef = newDef;
       }
     }
     if (nullable != null) {
@@ -257,10 +261,11 @@ class Field {
     deser ??= JType.ph;
     String withoutSymbolKey;
     if (symbols != null) {
-      withoutSymbolKey = key.replaceAllMapped(RegExp(r'[^a-zA-Z\d]'), (match) {
+      withoutSymbolKey = key.replaceAllMapped(RegExp(r'^[^a-zA-Z\d]'), (match) {
         final group = match.group(0)!;
+        group.$debug();
         if (symbols.containsKey(group)) {
-          return '_${symbols[group]!}_';
+          return '_${symbols[group]!}_'..$debug();
         }
         return group;
       });

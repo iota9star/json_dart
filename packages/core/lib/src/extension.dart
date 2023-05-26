@@ -48,7 +48,7 @@ extension ListString on List<String> {
             return '_';
           }
           if (symbols != null) {
-            return e.replaceAllMapped(RegExp(r'[^a-zA-Z\d]'), (match) {
+            return e.replaceAllMapped(RegExp(r'^[^a-zA-Z\d]'), (match) {
               final group = match.group(0)!;
               if (symbols.containsKey(group)) {
                 return '_${symbols[group]!}_';

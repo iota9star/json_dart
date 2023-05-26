@@ -52,7 +52,7 @@ class {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }} {
   @override
   int get hashCode => Object.hashAll([
 {{# obj_fields }}
-        {{# field_is_array }}const DeepCollectionEquality().hash({{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}){{/ field_is_array }}{{^ field_is_array }}{{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}.hashCode{{/ field_is_array }},
+        {{# field_is_array }}const DeepCollectionEquality().hash({{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}){{/ field_is_array }}{{^ field_is_array }}{{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}{{/ field_is_array }},
 {{/ obj_fields }}
       ]);
 
@@ -121,7 +121,7 @@ class {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }} {
   @override
   int get hashCode => Object.hashAll([
 {{# obj_fields }}
-        {{# field_is_array }}const DeepCollectionEquality().hash({{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}){{/ field_is_array }}{{^ field_is_array }}{{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}.hashCode{{/ field_is_array }},
+        {{# field_is_array }}const DeepCollectionEquality().hash({{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}){{/ field_is_array }}{{^ field_is_array }}{{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}{{/ field_is_array }},
 {{/ obj_fields }}
       ]);
 
@@ -175,7 +175,7 @@ class {{# @pascal_case }}{{ obj_name }}{{/ @pascal_case }} {
   @override
   int get hashCode => Object.hashAll([
 {{# obj_fields }}
-        {{# field_is_array }}const DeepCollectionEquality().hash({{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}){{/ field_is_array }}{{^ field_is_array }}{{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}.hashCode{{/ field_is_array }},
+        {{# field_is_array }}const DeepCollectionEquality().hash({{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}){{/ field_is_array }}{{^ field_is_array }}{{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}{{/ field_is_array }},
 {{/ obj_fields }}
       ]);
 
