@@ -31,6 +31,7 @@
 
   <title>JSOND</title>
   <link rel="manifest" href="manifest.json">
+  <link href="ani.css" type="text/css" rel="stylesheet">
 
   <script>
     // The value below is injected by flutter build, do not touch.
@@ -45,7 +46,7 @@
       right: 0;
       bottom: 0;
       top: 0;
-      z-index: 999;
+      z-index: 9;
     }
 
     #loading div {
@@ -67,11 +68,29 @@
         transform: translate(-50%, -50%) rotate(360deg);
       }
     }
+
+    @media (prefers-color-scheme: dark) {
+      #loading {
+        background: black;
+      }
+    }
   </style>
 </head>
 <body>
 <div id="loading">
   <div></div>
+  <i class="purple"></i>
+  <i class="medium-blue"></i>
+  <i class="light-blue"></i>
+  <i class="red"></i>
+  <i class="orange"></i>
+  <i class="yellow"></i>
+  <i class="cyan"></i>
+  <i class="light-green"></i>
+  <i class="lime"></i>
+  <i class="magenta"></i>
+  <i class="lightish-red"></i>
+  <i class="pink"></i>
 </div>
 <script>
   window.addEventListener('load', function (ev) {
@@ -91,6 +110,45 @@
       }
     });
   });
+  try {
+    var request = window.indexedDB.open('settings', 1);
+    request.onerror = function (e) {
+      console.log(e);
+    }
+    request.onupgradeneeded = function (e) {
+      try {
+        var db = e.target.result;
+        if (!db.objectStoreNames.contains('box')) {
+          db.createObjectStore('box', {autoIncrement: true});
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    request.onsuccess = function (event) {
+      try {
+        var db = event.target.result;
+        var transaction = db.transaction(['box']);
+        var objectStore = transaction.objectStore('box');
+        var themeMode = objectStore.get('theme_mode');
+        themeMode.onsuccess = function () {
+          let result = themeMode.result;
+          var loading = document.getElementById('loading');
+          if (loading) {
+            if (result === 'dark') {
+              loading.style.background = '#000';
+            } else if (result === 'light') {
+              loading.style.background = '#fff';
+            }
+          }
+        };
+      } catch (e) {
+        console.error(e);
+      }
+    };
+  } catch (e) {
+    console.error(e);
+  }
 </script>
 </body>
 </html>
