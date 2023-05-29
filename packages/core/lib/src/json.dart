@@ -68,7 +68,14 @@ class JSONDef {
   List<Map<String, dynamic>> toJson({
     Map<String, String>? symbols,
   }) {
-    return _objs.map((e) => e.toJson(symbols: symbols)).toList(growable: false);
+    return _objs
+        .mapIndexed(
+          (index, e) => e.toJson(symbols: symbols)
+            ..['obj_index'] = index
+            ..['obj_is_first'] = index == 0
+            ..['obj_is_last'] = index == _objs.length - 1,
+        )
+        .toList(growable: false);
   }
 
   static JSONDef fromString<T>(

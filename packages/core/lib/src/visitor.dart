@@ -178,6 +178,7 @@ class Obj {
           .mapIndexed(
             (index, e) => e.toJson(symbols: symbols)
               ..['field_index'] = index
+              ..['field_is_first'] = index == 0
               ..['field_is_last'] = index == _fields.length - 1,
           )
           .toList(growable: false),

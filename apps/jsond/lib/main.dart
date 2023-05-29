@@ -1192,6 +1192,9 @@ class _TempEditorState extends State<TempEditor> {
     MapEntry('ObjNaming', '{{ obj_naming }}'),
     MapEntry('ObjCustomName', '{{ obj_custom_name }}'),
     MapEntry('ObjHasCustomName', '{{ obj_has_custom_name }}'),
+    MapEntry('ObjIndex', '{{ obj_index }}'),
+    MapEntry('ObjIsFirst', '{{# obj_is_first }}{{/ obj_is_first }}'),
+    MapEntry('ObjIsLast', '{{# obj_is_last }}{{/ obj_is_last }}'),
     MapEntry('ObjFields', '{{# obj_fields }}{{/ obj_fields }}'),
     MapEntry(
       'PascalCaseObjName',
@@ -1200,6 +1203,7 @@ class _TempEditorState extends State<TempEditor> {
     MapEntry('ObjFieldsLength', '{{ obj_fields_length }}'),
     MapEntry('Field', '{{ field_key }}'),
     MapEntry('FieldIndex', '{{ field_index }}'),
+    MapEntry('FieldIsFirst', '{{# field_is_first }}{{/ field_is_first }}'),
     MapEntry('FieldIsLast', '{{# field_is_last }}{{/ field_is_last }}'),
     MapEntry(
       'CamelCaseField',
@@ -1245,8 +1249,11 @@ class _TempEditorState extends State<TempEditor> {
   static final _objKeys = [
     'obj_path',
     'obj_name',
+    'obj_naming',
+    'obj_custom_name',
     'obj_fields_length',
     'obj_fields',
+    'obj_index',
   ].map((e) => MapEntry(e, '{{ $e }}')).toList(growable: false);
 
   static final _fieldKeys = [
@@ -1255,12 +1262,7 @@ class _TempEditorState extends State<TempEditor> {
     'field_type_name',
     'field_type_naming',
     'field_type_custom_name',
-    'field_type_has_custom_name',
-    'field_is_dynamic',
-    'field_is_object',
-    'field_is_array',
-    'field_is_primitive',
-    'field_is_complex',
+    'field_index',
     'field_nullable',
     'field_deser',
   ].map((e) => MapEntry(e, '{{ $e }}')).toList(growable: false);
