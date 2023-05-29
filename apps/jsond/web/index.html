@@ -40,12 +40,14 @@
   <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
   <style>
+    body {
+      position: fixed;
+      inset: 0;
+    }
+
     #loading {
       position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      top: 0;
+      inset: 0;
       z-index: 9;
     }
 
@@ -70,7 +72,7 @@
     }
 
     @media (prefers-color-scheme: dark) {
-      #loading {
+      body {
         background: black;
       }
     }
@@ -133,13 +135,10 @@
         var themeMode = objectStore.get('theme_mode');
         themeMode.onsuccess = function () {
           let result = themeMode.result;
-          var loading = document.getElementById('loading');
-          if (loading) {
-            if (result === 'dark') {
-              loading.style.background = '#000';
-            } else if (result === 'light') {
-              loading.style.background = '#fff';
-            }
+          if (result === 'dark') {
+            document.body.style.background = '#000';
+          } else if (result === 'light') {
+            document.body.style.background = '#fff';
           }
         };
       } catch (e) {

@@ -3,7 +3,6 @@ import 'package:mustache_template/mustache_template.dart';
 import 'package:recase/recase.dart';
 
 import '../core.dart';
-import 'consts.dart';
 import 'type.dart';
 
 String renderObjs(

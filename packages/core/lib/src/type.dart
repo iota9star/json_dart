@@ -2,6 +2,7 @@ import 'package:antlr4/antlr4.dart';
 import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
 
+import '../core.dart';
 import 'antlr/JSON5Parser.dart';
 import 'extension.dart';
 
@@ -34,7 +35,7 @@ class StringType<R> extends ValueType<R> {
   @override
   final String value;
 
-  late final FieldTypeDef type = FieldTypeDef(name: 'String');
+  late final FieldTypeDef type = FieldTypeDef(def: 'String');
 
   @override
   String deser({
@@ -58,7 +59,7 @@ class NumberType<R> extends ValueType<R> {
 
   bool get isInt => value is int;
 
-  late final FieldTypeDef type = FieldTypeDef(name: isInt ? 'int' : 'double');
+  late final FieldTypeDef type = FieldTypeDef(def: isInt ? 'int' : 'double');
 
   @override
   FieldTypeDef typing({Map<String, String>? symbols}) {
@@ -80,7 +81,7 @@ class BooleanType<R> extends ValueType<R> {
   @override
   final bool value;
 
-  late final FieldTypeDef type = FieldTypeDef(name: 'bool');
+  late final FieldTypeDef type = FieldTypeDef(def: 'bool');
 
   @override
   FieldTypeDef typing({Map<String, String>? symbols}) {
@@ -102,7 +103,7 @@ class NullableType<R> extends ValueType<R> {
   @override
   Object? get value => null;
 
-  late final FieldTypeDef type = FieldTypeDef(name: 'null');
+  late final FieldTypeDef type = FieldTypeDef(def: 'null');
 
   @override
   FieldTypeDef typing({Map<String, String>? symbols}) {
@@ -125,22 +126,26 @@ class ArrayType<R> extends JType<ArrayContext, R> {
 
   FieldTypeDef childType({Map<String, String>? symbols}) {
     if (values.isEmpty) {
-      return FieldTypeDef(name: 'dynamic', type: FieldType.dynamic);
+      return FieldTypeDef(def: 'dynamic', type: FieldType.dynamic);
     }
     String? type;
+    List<String>? ps;
     bool nullable = false;
     for (final value in values) {
       if (value is NullableType) {
         nullable = true;
       } else {
-        final nextType = value.typing(symbols: symbols).name;
+        final nextType = value.typing(symbols: symbols).def;
         if (type != null && nextType != type) {
-          return FieldTypeDef(name: 'dynamic', type: FieldType.dynamic);
+          return FieldTypeDef(def: 'dynamic', type: FieldType.dynamic);
         }
         type = nextType;
+        if (ps == null && value is ObjectType) {
+          ps = value.ctx.getPath();
+        }
       }
     }
-    return FieldTypeDef(name: type!.nullable(nullable));
+    return FieldTypeDef(def: type!.nullable(nullable), path: ps);
   }
 
   @override
@@ -188,7 +193,9 @@ class ArrayType<R> extends JType<ArrayContext, R> {
         throw StateError('Unreachable');
       }
       final ct = childType(symbols: symbols);
-      final mapType = ct.type == FieldType.dynamic ? '' : '<${ct.name}>';
+      final mapType = ct.type == FieldType.dynamic
+          ? ''
+          : '<${ct.naming(symbols: symbols)}>';
       if (nullable) {
         return '${JType.ph} is List ? ${JType.ph}.map$mapType((e) { return $child;}).toList() : null';
       }
@@ -196,15 +203,15 @@ class ArrayType<R> extends JType<ArrayContext, R> {
     }
     final type = typing(symbols: symbols);
     if (nullable) {
-      return '${JType.ph} is List ? ${type.name}.from(${JType.ph}) : null';
+      return '${JType.ph} is List ? ${type.naming(symbols: symbols)}.from(${JType.ph}) : null';
     }
-    return '${type.name}.from(${JType.ph})';
+    return '${type.naming(symbols: symbols)}.from(${JType.ph})';
   }
 
   @override
   FieldTypeDef typing({Map<String, String>? symbols}) {
     return FieldTypeDef(
-      name: 'List<${childType(symbols: symbols).name}>',
+      child: childType(symbols: symbols),
       type: FieldType.array,
     );
   }
@@ -253,9 +260,9 @@ class ObjectType<R> extends JType<ObjectContext, R> {
   String deser({bool nullable = false, Map<String, String>? symbols}) {
     final type = typing(symbols: symbols);
     if (nullable) {
-      return '${JType.ph} == null ? null : ${type.name}.fromJson(${JType.ph} as Map<String, dynamic>,)';
+      return '${JType.ph} == null ? null : ${type.naming(symbols: symbols)}.fromJson(${JType.ph} as Map<String, dynamic>,)';
     }
-    return '${type.name}.fromJson(${JType.ph} as Map<String, dynamic>,)';
+    return '${type.naming(symbols: symbols)}.fromJson(${JType.ph} as Map<String, dynamic>,)';
   }
 
   @override
@@ -273,7 +280,7 @@ class ObjectType<R> extends JType<ObjectContext, R> {
   FieldTypeDef typing({Map<String, String>? symbols}) {
     final path = ctx.getPath();
     return FieldTypeDef(
-      name: path.toPascalCase(symbols: symbols),
+      def: path.toPascalCase(symbols: symbols),
       path: path,
       type: FieldType.object,
     );
@@ -282,27 +289,34 @@ class ObjectType<R> extends JType<ObjectContext, R> {
 
 class FieldTypeDef {
   FieldTypeDef({
-    required this.name,
+    this.def,
+    this.child,
     this.path,
     this.type = FieldType.primitive,
   });
 
-  final String name;
+  final String? def;
+  final FieldTypeDef? child;
   final List<String>? path;
   final FieldType type;
 
   String? customName;
 
-  String naming({
-    Map<String, String>? symbols,
-  }) {
+  String naming({Map<String, String>? symbols}) {
     if (customName != null && customName!.isNotEmpty) {
       return customName!;
     }
+    return name(symbols: symbols);
+  }
+
+  String name({Map<String, String>? symbols}) {
     if (path != null) {
       return path!.toPascalCase(symbols: symbols);
     }
-    return name;
+    if (type == FieldType.array) {
+      return 'List<${child?.naming(symbols: symbols)}>';
+    }
+    return def!;
   }
 }
 

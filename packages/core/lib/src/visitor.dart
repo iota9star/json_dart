@@ -3,7 +3,6 @@ import 'package:collection/collection.dart';
 import '../core.dart';
 import 'antlr/JSON5BaseVisitor.dart';
 import 'antlr/JSON5Parser.dart';
-import 'extension.dart';
 import 'type.dart';
 
 class JVisitor extends JSON5BaseVisitor<JType> {
@@ -138,6 +137,10 @@ class ObjKey {
     if (customName != null && customName!.isNotEmpty) {
       return customName!;
     }
+    return name(symbols: symbols);
+  }
+
+  String name({Map<String, String>? symbols}) {
     return path.toPascalCase(symbols: symbols);
   }
 
@@ -165,7 +168,11 @@ class Obj {
   Map<String, dynamic> toJson({Map<String, String>? symbols}) {
     return {
       'obj_path': key.path,
-      'obj_name': key.naming(symbols: symbols),
+      'obj_name': key.name(symbols: symbols),
+      'obj_naming': key.naming(symbols: symbols),
+      'obj_custom_name': key.customName,
+      'obj_has_custom_name':
+          key.customName != null && key.customName!.isNotEmpty,
       'obj_fields_length': _fields.length,
       'obj_fields': _fields
           .mapIndexed(
@@ -176,6 +183,16 @@ class Obj {
           .toList(growable: false),
     };
   }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Obj && runtimeType == other.runtimeType && key == other.key;
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => key.hashCode;
 }
 
 class Field {
@@ -191,9 +208,10 @@ class Field {
   FieldTypeDef? rawDef;
   bool nullable;
 
-  late final def = rawDef ??
+  FieldTypeDef get def =>
+      rawDef ??
       FieldTypeDef(
-        name: 'dynamic',
+        def: 'dynamic',
         type: FieldType.dynamic,
       );
 
@@ -207,8 +225,8 @@ class Field {
         newDef.type != FieldType.dynamic &&
         curr?.type != FieldType.dynamic) {
       if (curr != null) {
-        rawDef = curr.name != newDef.name && curr.type != FieldType.dynamic
-            ? FieldTypeDef(name: 'dynamic', type: FieldType.dynamic)
+        rawDef = curr.def != newDef.def && curr.type != FieldType.dynamic
+            ? FieldTypeDef(def: 'dynamic', type: FieldType.dynamic)
             : newDef;
       } else {
         rawDef = newDef;
@@ -271,12 +289,15 @@ class Field {
     } else {
       withoutSymbolKey = key;
     }
-    final typeName = def.naming(symbols: symbols);
     return {
       'field_key': key,
       'field_without_symbol_key': withoutSymbolKey,
       'field_type': def.type.name,
-      'field_type_name': typeName,
+      'field_type_name': def.name(symbols: symbols),
+      'field_type_naming':def.naming(symbols: symbols),
+      'field_type_custom_name': def.customName,
+      'field_type_has_custom_name':
+          def.customName != null && def.customName!.isNotEmpty,
       'field_is_dynamic': def.type == FieldType.dynamic,
       'field_is_object': def.type == FieldType.object,
       'field_is_array': def.type == FieldType.array,

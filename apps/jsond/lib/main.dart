@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:code_text_field/code_text_field.dart';
 import 'package:collection/collection.dart';
+import 'package:dart_style/dart_style.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -15,12 +17,13 @@ import 'package:json_core/core.dart';
 import 'package:recase/recase.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 import 'package:universal_platform/universal_platform.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'consts.dart';
-import 'internal/extension.dart';
 import 'internal/hive.dart';
 import 'notifiers.dart';
+import 'res/assets.gen.dart';
 import 'styles.dart';
 import 'widget/ripple_tap.dart';
 
@@ -75,7 +78,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
-      valueListenable: Hives.settingBox.listenable(),
+      valueListenable: Hives.settingBox.listenable(
+        keys: [
+          'theme_mode',
+          'theme_color',
+        ],
+      ),
       builder: (context, box, child) {
         final mode = box.get('theme_mode', defaultValue: ThemeMode.system.name);
         final color = Color(
@@ -117,12 +125,13 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
   void initState() {
     windowManager.addListener(this);
     super.initState();
+    _tryNewCode();
   }
 
   @override
   void dispose() {
     windowManager.removeListener(this);
-    _codeController.dispose();
+    _jsonController.dispose();
     _focusNode.dispose();
     super.dispose();
   }
@@ -175,9 +184,16 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
     return 400.0;
   }());
   late final _selected = ValueNotifier(_builtInTemplates.first);
-  late final _codeController =
-      CodeController(language: json, text: defaultJson);
+  late final _expanded = ValueNotifier(true);
+  late final _jsonController = CodeController(
+    language: json,
+    text: Hives.settingBox.get('json', defaultValue: defaultJson),
+  );
+  final _codeDef = ValueNotifier<JSONDef?>(null);
   final _focusNode = FocusNode();
+  final _objs = NewValueNotifier<Map<ObjKey, TextEditingController>>({});
+
+  Timer? _inputTimer;
 
   @override
   Widget build(BuildContext context) {
@@ -193,7 +209,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
-          final codes = _codeController.text.trim();
+          final codes = _jsonController.text.trim();
           if (codes.isEmpty) {
             await _showEmptyInfo(context);
             return;
@@ -217,9 +233,9 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
             );
           }
         },
-        label: const Text('Generate'),
+        label: const Text('Copy'),
         icon: const Icon(
-          Icons.generating_tokens_outlined,
+          Icons.copy_all_rounded,
           size: 16.0,
         ),
       ),
@@ -260,39 +276,183 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       child: Container(
         color: theme.colorScheme.onSecondary,
         height: double.infinity,
-        child: ValueListenableBuilder(
-          valueListenable: _codes,
-          builder: (context, codes, child) {
-            final length = codes.length;
-            return ListView.builder(
-              itemBuilder: (context, index) {
-                return HighlightView(
-                  codes[index],
-                  language: 'dart',
-                  textStyle: codeTextStyle,
-                  theme: getCodeTheme(theme),
-                  padding: index == 0
-                      ? const EdgeInsets.only(
-                          left: 24.0,
-                          right: 24.0,
-                          top: 24.0,
-                        )
-                      : index == length - 1
-                          ? const EdgeInsets.only(
-                              left: 24.0,
-                              right: 24.0,
-                              bottom: 24.0,
-                            )
-                          : const EdgeInsets.symmetric(
-                              horizontal: 24.0,
-                            ),
-                );
-              },
-              itemCount: length,
-            );
-          },
+        child: Column(
+          children: [
+            _buildCustomObjectNamePanel(theme),
+            Expanded(
+              child: ValueListenableBuilder(
+                valueListenable: _codes,
+                builder: (context, codes, child) {
+                  final length = codes.length;
+                  return ListView.builder(
+                    itemBuilder: (context, index) {
+                      return HighlightView(
+                        codes[index],
+                        language: 'dart',
+                        textStyle: codeTextStyle,
+                        theme: getCodeTheme(theme),
+                        padding: index == 0
+                            ? const EdgeInsets.only(
+                                left: 24.0,
+                                right: 24.0,
+                                top: 24.0,
+                              )
+                            : index == length - 1
+                                ? const EdgeInsets.only(
+                                    left: 24.0,
+                                    right: 24.0,
+                                    bottom: 24.0,
+                                  )
+                                : const EdgeInsets.symmetric(
+                                    horizontal: 24.0,
+                                  ),
+                      );
+                    },
+                    itemCount: length,
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildCustomObjectNamePanel(ThemeData theme) {
+    return ValueListenableBuilder(
+      valueListenable: _objs,
+      builder: (context, objs, child) {
+        final list = objs.entries.toList();
+        if (list.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        return ValueListenableBuilder(
+          valueListenable: _expanded,
+          builder: (context, value, child) {
+            return Column(
+              children: [
+                RippleTap(
+                  onTap: () {
+                    _expanded.value = !_expanded.value;
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24.0,
+                      vertical: 12.0,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Custom Object Name',
+                            style: theme.textTheme.titleLarge,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        AnimatedRotation(
+                          turns: value ? -0.5 : 0.0,
+                          duration: const Duration(milliseconds: 360),
+                          child: const Icon(Icons.expand_more_rounded),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                AnimatedCrossFade(
+                  firstChild: Container(height: 0.0),
+                  firstCurve: const Interval(
+                    0.0,
+                    0.6,
+                    curve: Curves.fastOutSlowIn,
+                  ),
+                  secondCurve: const Interval(
+                    0.4,
+                    1.0,
+                    curve: Curves.fastOutSlowIn,
+                  ),
+                  sizeCurve: Curves.fastOutSlowIn,
+                  secondChild: SizedBox(
+                    height: mediaQuery.size.height * 0.3,
+                    child: _buildCustomNameFields(list),
+                  ),
+                  crossFadeState: value
+                      ? CrossFadeState.showSecond
+                      : CrossFadeState.showFirst,
+                  duration: const Duration(milliseconds: 360),
+                ),
+                Divider(
+                  height: 8.0,
+                  thickness: 8.0,
+                  color: theme.colorScheme.background,
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildCustomNameFields(
+    List<MapEntry<ObjKey, TextEditingController>> list,
+  ) {
+    return GridView.builder(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 24.0,
+        vertical: 12.0,
+      ),
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 200.0,
+        mainAxisExtent: 50.0,
+        crossAxisSpacing: 12.0,
+        mainAxisSpacing: 12.0,
+      ),
+      itemBuilder: (context, index) {
+        final entry = list[index];
+        final label = entry.key.path.toPascalCase(symbols: builtInSymbols);
+        return TextField(
+          controller: entry.value,
+          decoration: InputDecoration(
+            border: const OutlineInputBorder(),
+            floatingLabelBehavior: FloatingLabelBehavior.always,
+            isDense: true,
+            labelText: label,
+          ),
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\d_]'))
+          ],
+          onChanged: (v) {
+            final def = _codeDef.value!;
+            if (v.isEmpty) {
+              def.updateObjName(entry.key, label);
+            } else {
+              def.updateObjName(entry.key, v);
+            }
+            _objs.newValue(_objs.value);
+            try {
+              final tpl = _selected.value;
+              String code = renderObjs(
+                tpl.template,
+                def.toJson(symbols: builtInSymbols),
+                keywords: builtInDartKeywords,
+              );
+              if (tpl.dartFormat) {
+                code = DartFormatter(fixes: StyleFix.all).format(code);
+              }
+              _codes.value = code
+                  .split('\n')
+                  .slices(500)
+                  .map((e) => e.join('\n'))
+                  .toList(growable: false);
+            } catch (e, s) {
+              e.$error(stackTrace: s);
+            }
+          },
+        );
+      },
+      itemCount: list.length,
     );
   }
 
@@ -317,10 +477,21 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                       styles: getCodeTheme(theme),
                     ),
                     child: CodeField(
-                      controller: _codeController,
+                      controller: _jsonController,
                       focusNode: _focusNode,
                       wrap: true,
                       textStyle: codeTextStyle,
+                      onChanged: (v) {
+                        if (v.isEmpty) {
+                          _codeDef.value = null;
+                          _codes.value = [];
+                          _objs.value = {};
+                          return;
+                        }
+                        _inputTimer?.cancel();
+                        _inputTimer =
+                            Timer(const Duration(seconds: 1), _tryNewCode);
+                      },
                     ),
                   ),
                 ),
@@ -336,7 +507,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                   children: [
                     ElevatedButton.icon(
                       onPressed: () {
-                        final codes = _codeController.text.trim();
+                        final codes = _jsonController.text.trim();
                         _formatJsonContent(context, codes);
                       },
                       icon: const Icon(
@@ -347,8 +518,9 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                     ),
                     ElevatedButton.icon(
                       onPressed: () {
-                        final codes = _codeController.text.trim();
-                        _codeController.text = codes.unicodeToRawString();
+                        final codes = _jsonController.text.trim();
+                        _jsonController.text = codes.unicodeToRawString();
+                        _tryNewCode();
                       },
                       icon: const Icon(
                         Icons.transform,
@@ -358,7 +530,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                     ),
                     ElevatedButton.icon(
                       onPressed: () {
-                        _codeController.text = '';
+                        _jsonController.text = '';
                         _codes.value = [];
                       },
                       icon: const Icon(
@@ -377,6 +549,46 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
     );
   }
 
+  void _tryNewCode() {
+    _inputTimer?.cancel();
+    try {
+      final json = _jsonController.text;
+      final def = JSONDef.fromString(json, symbols: builtInSymbols);
+      final map = _objs.value;
+      final newMap = <ObjKey, TextEditingController>{};
+      for (final obj in def.objs) {
+        final key = obj.key;
+        if (map.containsKey(key)) {
+          final old = map[key]!;
+          def.updateObjName(key, old.text);
+          newMap[key] = old;
+        } else {
+          newMap[key] =
+              TextEditingController(text: key.naming(symbols: builtInSymbols));
+        }
+      }
+      _objs.newValue(newMap);
+      _codeDef.value = def;
+      final tpl = _selected.value;
+      String code = renderObjs(
+        tpl.template,
+        def.toJson(symbols: builtInSymbols),
+        keywords: builtInDartKeywords,
+      );
+      if (tpl.dartFormat) {
+        code = DartFormatter(fixes: StyleFix.all).format(code);
+      }
+      _codes.value = code
+          .split('\n')
+          .slices(500)
+          .map((e) => e.join('\n'))
+          .toList(growable: false);
+      Hives.settingBox.put('json', def.type.display);
+    } catch (e, s) {
+      e.$error(stackTrace: s);
+    }
+  }
+
   bool _formatJsonContent(
     BuildContext context,
     String codes,
@@ -386,7 +598,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
     }
     try {
       final def = JSONDef.fromString(codes);
-      _codeController.text = def.type.display;
+      _jsonController.text = def.type.display;
       return true;
     } catch (e) {
       _showJsonError(context, e);
@@ -399,151 +611,168 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
     return SizedBox(
       width: 240.0,
       height: double.infinity,
-      child: Padding(
-        padding: const EdgeInsets.only(top: 24.0),
-        child: Column(
-          children: [
-            Expanded(
-              child: ValueListenableBuilder(
-                valueListenable: _selected,
-                builder: (context, selected, child) {
-                  return CustomScrollView(
-                    slivers: [
-                      SliverPinnedHeader(
-                        child: Container(
-                          decoration: BoxDecoration(color: theme.cardColor),
-                          padding: const EdgeInsetsDirectional.only(
-                            start: 24.0,
-                            end: 12.0,
-                            bottom: 12.0,
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  'Templates',
-                                  style: theme.textTheme.titleLarge,
+      child: Column(
+        children: [
+          Expanded(
+            child: ValueListenableBuilder(
+              valueListenable: _selected,
+              builder: (context, selected, child) {
+                return CustomScrollView(
+                  slivers: [
+                    SliverPinnedHeader(
+                      child: Container(
+                        decoration: BoxDecoration(color: theme.cardColor),
+                        padding: const EdgeInsetsDirectional.only(
+                          start: 24.0,
+                          end: 24.0,
+                          bottom: 12.0,
+                          top: 24.0,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Transform.translate(
+                                  offset: const Offset(-12.0, 0.0),
+                                  child: IconButton(
+                                    onPressed: () {
+                                      launchUrlString(
+                                        'https://github.com/iota9star/json_dart',
+                                      );
+                                    },
+                                    tooltip: 'Open Github',
+                                    icon: Assets.github.image(width: 36.0),
+                                  ),
                                 ),
-                              ),
-                              IconButton(
-                                onPressed: () {
-                                  _showSettingPanel(context);
-                                },
-                                tooltip: 'Settings',
-                                icon: const Icon(
-                                  Icons.settings_outlined,
-                                  size: 20.0,
+                                const Spacer(),
+                                IconButton(
+                                  onPressed: () {
+                                    _showSettingPanel(context);
+                                  },
+                                  tooltip: 'Settings',
+                                  icon: const Icon(
+                                    Icons.settings_outlined,
+                                    size: 20.0,
+                                  ),
+                                  style: IconButton.styleFrom(
+                                    foregroundColor: colors.primary,
+                                    backgroundColor: colors.surfaceVariant,
+                                    disabledForegroundColor:
+                                        colors.onSurface.withOpacity(0.38),
+                                    disabledBackgroundColor:
+                                        colors.onSurface.withOpacity(0.12),
+                                    hoverColor:
+                                        colors.primary.withOpacity(0.08),
+                                    focusColor:
+                                        colors.primary.withOpacity(0.12),
+                                    highlightColor:
+                                        colors.primary.withOpacity(0.12),
+                                  ),
                                 ),
-                                style: IconButton.styleFrom(
-                                  foregroundColor: colors.primary,
-                                  backgroundColor: colors.surfaceVariant,
-                                  disabledForegroundColor:
-                                      colors.onSurface.withOpacity(0.38),
-                                  disabledBackgroundColor:
-                                      colors.onSurface.withOpacity(0.12),
-                                  hoverColor: colors.primary.withOpacity(0.08),
-                                  focusColor: colors.primary.withOpacity(0.12),
-                                  highlightColor:
-                                      colors.primary.withOpacity(0.12),
-                                ),
-                              ),
-                            ],
-                          ),
+                              ],
+                            ),
+                            const SizedBox(height: 12.0),
+                            Text(
+                              'Templates',
+                              style: theme.textTheme.titleLarge,
+                            ),
+                          ],
                         ),
                       ),
-                      MultiSliver(
-                        pushPinnedChildren: true,
-                        children: [
-                          SliverPinnedHeader(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 24.0,
-                                vertical: 8.0,
-                              ),
-                              decoration: BoxDecoration(color: theme.cardColor),
-                              child: Text(
-                                'Built-in',
-                                style: theme.textTheme.labelMedium,
-                              ),
+                    ),
+                    MultiSliver(
+                      pushPinnedChildren: true,
+                      children: [
+                        SliverPinnedHeader(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24.0,
+                              vertical: 8.0,
+                            ),
+                            decoration: BoxDecoration(color: theme.cardColor),
+                            child: Text(
+                              'Built-in',
+                              style: theme.textTheme.labelMedium,
                             ),
                           ),
-                          SliverList(
-                            delegate: SliverChildBuilderDelegate(
-                              (context, index) {
-                                final tpl = _builtInTemplates[index];
-                                return _buildTemplateItem(
-                                  context,
-                                  theme,
-                                  tpl,
-                                  tpl == selected,
-                                );
-                              },
-                              childCount: _builtInTemplates.length,
-                            ),
+                        ),
+                        SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              final tpl = _builtInTemplates[index];
+                              return _buildTemplateItem(
+                                context,
+                                theme,
+                                tpl,
+                                tpl == selected,
+                              );
+                            },
+                            childCount: _builtInTemplates.length,
                           ),
-                        ],
-                      ),
-                      const SliverToBoxAdapter(child: SizedBox(height: 8.0)),
-                      ValueListenableBuilder(
-                        valueListenable: Hives.templateBox.listenable(),
-                        builder: (context, box, child) {
-                          final templates = box.values.toList(growable: false);
-                          if (templates.isEmpty) {
-                            return const SliverToBoxAdapter();
-                          }
-                          return MultiSliver(
-                            pushPinnedChildren: true,
-                            children: [
-                              SliverPinnedHeader(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 24.0,
-                                    vertical: 8.0,
-                                  ),
-                                  decoration:
-                                      BoxDecoration(color: theme.cardColor),
-                                  child: Text(
-                                    'Custom Template',
-                                    style: theme.textTheme.labelMedium,
-                                  ),
+                        ),
+                      ],
+                    ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 8.0)),
+                    ValueListenableBuilder(
+                      valueListenable: Hives.templateBox.listenable(),
+                      builder: (context, box, child) {
+                        final templates = box.values.toList(growable: false);
+                        if (templates.isEmpty) {
+                          return const SliverToBoxAdapter();
+                        }
+                        return MultiSliver(
+                          pushPinnedChildren: true,
+                          children: [
+                            SliverPinnedHeader(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24.0,
+                                  vertical: 8.0,
+                                ),
+                                decoration:
+                                    BoxDecoration(color: theme.cardColor),
+                                child: Text(
+                                  'Custom Template',
+                                  style: theme.textTheme.labelMedium,
                                 ),
                               ),
-                              SliverList(
-                                delegate: SliverChildBuilderDelegate(
-                                  (context, index) {
-                                    final tpl = templates[index];
-                                    return _buildTemplateItem(
-                                      context,
-                                      theme,
-                                      tpl,
-                                      tpl == selected,
-                                    );
-                                  },
-                                  childCount: templates.length,
-                                ),
+                            ),
+                            SliverList(
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                                  final tpl = templates[index];
+                                  return _buildTemplateItem(
+                                    context,
+                                    theme,
+                                    tpl,
+                                    tpl == selected,
+                                  );
+                                },
+                                childCount: templates.length,
                               ),
-                            ],
-                          );
-                        },
-                      ),
-                    ],
-                  );
-                },
-              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
+                );
+              },
             ),
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: ElevatedButton.icon(
-                onPressed: () => _showTemplateEditor(context),
-                icon: const Icon(
-                  Icons.add_rounded,
-                  size: 16.0,
-                ),
-                label: const Text('New Template'),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: ElevatedButton.icon(
+              onPressed: () => _showTemplateEditor(context),
+              icon: const Icon(
+                Icons.add_rounded,
+                size: 16.0,
               ),
-            )
-          ],
-        ),
+              label: const Text('New Template'),
+            ),
+          )
+        ],
       ),
     );
   }
@@ -653,6 +882,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
         onTap: () {
           if (_selected.value != tpl) {
             _selected.value = tpl;
+            _tryNewCode();
           }
         },
       ),

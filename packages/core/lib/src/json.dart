@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:antlr4/antlr4.dart';
 import 'package:collection/collection.dart';
 
+import '../core.dart';
 import 'antlr/JSON5Lexer.dart';
 import 'antlr/JSON5Parser.dart';
 import 'type.dart';
@@ -31,7 +32,7 @@ class JSONDef {
         final i = keys[name]!;
         final next = i + 1;
         keys[name] = next;
-        updateObjName(obj, '$name$next');
+        updateObjName(obj.key, '$name$next');
         hasConflict = true;
       } else {
         keys[name] = 0;
@@ -42,14 +43,19 @@ class JSONDef {
     }
   }
 
-  void updateObjName(Obj obj, String? newObjName) {
-    final key = obj.key;
+  void updateObjName(ObjKey key, String? newObjName) {
+    if (newObjName != null && newObjName.isEmpty) {
+      newObjName = null;
+    }
     key.customName = newObjName;
     for (final item in _objs) {
       for (final field in item.fields) {
         final path = field.def.path;
         if (const ListEquality().equals(path, key.path)) {
           field.def.customName = newObjName;
+        }
+        if (const ListEquality().equals(field.rawDef?.child?.path, key.path)) {
+          field.rawDef!.child!.customName = newObjName;
         }
       }
     }
