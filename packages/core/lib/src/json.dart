@@ -54,8 +54,12 @@ class JSONDef {
         if (const ListEquality().equals(path, key.path)) {
           field.def.customName = newObjName;
         }
-        if (const ListEquality().equals(field.rawDef?.child?.path, key.path)) {
-          field.rawDef!.child!.customName = newObjName;
+        FieldTypeDef? child = field.def.child;
+        while (child != null) {
+          if (const ListEquality().equals(child.path, key.path)) {
+            child.customName = newObjName;
+          }
+          child = child.child;
         }
       }
     }

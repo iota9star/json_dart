@@ -4,7 +4,6 @@ import 'package:meta/meta.dart';
 
 import '../core.dart';
 import 'antlr/JSON5Parser.dart';
-import 'extension.dart';
 
 abstract class JType<T extends RuleContext, R> {
   JType(this.ctx);
@@ -130,12 +129,14 @@ class ArrayType<R> extends JType<ArrayContext, R> {
     }
     String? type;
     List<String>? ps;
+    FieldTypeDef? child;
     bool nullable = false;
     for (final value in values) {
       if (value is NullableType) {
         nullable = true;
       } else {
-        final nextType = value.typing(symbols: symbols).def;
+        final nextType =
+            value.typing(symbols: symbols).naming(symbols: symbols);
         if (type != null && nextType != type) {
           return FieldTypeDef(def: 'dynamic', type: FieldType.dynamic);
         }
@@ -143,9 +144,21 @@ class ArrayType<R> extends JType<ArrayContext, R> {
         if (ps == null && value is ObjectType) {
           ps = value.ctx.getPath();
         }
+        if (value is ArrayType) {
+          child = (value as ArrayType).childType(symbols: symbols);
+        }
       }
     }
-    return FieldTypeDef(def: type!.nullable(nullable), path: ps);
+    return FieldTypeDef(
+      def: type!.nullable(nullable),
+      path: ps,
+      child: child,
+      type: child != null
+          ? FieldType.array
+          : ps != null
+              ? FieldType.object
+              : FieldType.primitive,
+    );
   }
 
   @override

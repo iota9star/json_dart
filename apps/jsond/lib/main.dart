@@ -208,30 +208,12 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final codes = _jsonController.text.trim();
-          if (codes.isEmpty) {
-            await _showEmptyInfo(context);
-            return;
-          }
-          final formatted = _formatJsonContent(context, codes);
-          if (!formatted) {
-            return;
-          }
-          final tpl = _selected.value;
-          final dart = render(codes, tpl.template, dartFormat: tpl.dartFormat);
-          _codes.value = dart
-              .split('\n')
-              .slices(500)
-              .map((e) => e.join('\n'))
-              .toList(growable: false);
-          await Clipboard.setData(ClipboardData(text: dart));
-          if (mounted) {
-            _showSnackbar(
-              context,
-              'The generated code has been copied to the clipboard.',
-            );
-          }
+        onPressed: () {
+          Clipboard.setData(ClipboardData(text: _codes.value.join('\n')));
+          _showSnackbar(
+            context,
+            'The generated code has been copied to the clipboard.',
+          );
         },
         label: const Text('Copy'),
         icon: const Icon(
@@ -374,7 +356,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                   ),
                   sizeCurve: Curves.fastOutSlowIn,
                   secondChild: SizedBox(
-                    height: mediaQuery.size.height * 0.3,
+                    height: mediaQuery.size.height * 0.5,
                     child: _buildCustomNameFields(list),
                   ),
                   crossFadeState: value
@@ -405,7 +387,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       ),
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
         maxCrossAxisExtent: 200.0,
-        mainAxisExtent: 50.0,
+        mainAxisExtent: 42.0,
         crossAxisSpacing: 12.0,
         mainAxisSpacing: 12.0,
       ),
@@ -418,37 +400,43 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
             border: const OutlineInputBorder(),
             floatingLabelBehavior: FloatingLabelBehavior.always,
             isDense: true,
+            isCollapsed: true,
             labelText: label,
+            contentPadding: const EdgeInsets.all(12.0),
           ),
+          style: const TextStyle(fontSize: 14.0),
           inputFormatters: [
             FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\d_]'))
           ],
           onChanged: (v) {
-            final def = _codeDef.value!;
-            if (v.isEmpty) {
-              def.updateObjName(entry.key, label);
-            } else {
-              def.updateObjName(entry.key, v);
-            }
-            _objs.newValue(_objs.value);
-            try {
-              final tpl = _selected.value;
-              String code = renderObjs(
-                tpl.template,
-                def.toJson(symbols: builtInSymbols),
-                keywords: builtInDartKeywords,
-              );
-              if (tpl.dartFormat) {
-                code = DartFormatter(fixes: StyleFix.all).format(code);
+            _inputTimer?.cancel();
+            _inputTimer = Timer(const Duration(seconds: 1), () {
+              final def = _codeDef.value!;
+              if (v.isEmpty) {
+                def.updateObjName(entry.key, label);
+              } else {
+                def.updateObjName(entry.key, v);
               }
-              _codes.value = code
-                  .split('\n')
-                  .slices(500)
-                  .map((e) => e.join('\n'))
-                  .toList(growable: false);
-            } catch (e, s) {
-              e.$error(stackTrace: s);
-            }
+              _objs.newValue(_objs.value);
+              try {
+                final tpl = _selected.value;
+                String code = renderObjs(
+                  tpl.template,
+                  def.toJson(symbols: builtInSymbols),
+                  keywords: builtInDartKeywords,
+                );
+                if (tpl.dartFormat) {
+                  code = DartFormatter(fixes: StyleFix.all).format(code);
+                }
+                _codes.value = code
+                    .split('\n')
+                    .slices(500)
+                    .map((e) => e.join('\n'))
+                    .toList(growable: false);
+              } catch (e, s) {
+                e.$error(stackTrace: s);
+              }
+            });
           },
         );
       },
@@ -532,6 +520,8 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                       onPressed: () {
                         _jsonController.text = '';
                         _codes.value = [];
+                        _codeDef.value = null;
+                        _objs.value = {};
                       },
                       icon: const Icon(
                         Icons.clear_all_rounded,
@@ -597,7 +587,8 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       return false;
     }
     try {
-      final def = JSONDef.fromString(codes);
+      final def = JSONDef.fromString(codes, symbols: builtInSymbols);
+      _codeDef.value = def;
       _jsonController.text = def.type.display;
       return true;
     } catch (e) {
