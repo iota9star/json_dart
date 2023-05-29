@@ -1188,10 +1188,10 @@ class _TempEditorState extends State<TempEditor> {
 
   static const _shortcuts = [
     MapEntry('Objs', '{{# objs }}{{/ objs }}'),
-    MapEntry(
-      'ObjName',
-      '{{ obj_name }}',
-    ),
+    MapEntry('ObjName', '{{ obj_name }}'),
+    MapEntry('ObjNaming', '{{ obj_naming }}'),
+    MapEntry('ObjCustomName', '{{ obj_custom_name }}'),
+    MapEntry('ObjHasCustomName', '{{ obj_has_custom_name }}'),
     MapEntry('ObjFields', '{{# obj_fields }}{{/ obj_fields }}'),
     MapEntry(
       'PascalCaseObjName',
@@ -1207,6 +1207,7 @@ class _TempEditorState extends State<TempEditor> {
     ),
     MapEntry('FieldType', '{{ field_type }}'),
     MapEntry('FieldTypeName', '{{ field_type_name }}'),
+    MapEntry('FieldTypeNaming', '{{ field_type_naming }}'),
     MapEntry('FieldDeser', '{{ field_deser }}'),
     MapEntry('FieldIsObject', '{{# field_is_object }}{{/ field_is_object }}'),
     MapEntry('FieldIsArray', '{{# field_is_array }}{{/ field_is_array }}'),
@@ -1252,6 +1253,9 @@ class _TempEditorState extends State<TempEditor> {
     'field_key',
     'field_type',
     'field_type_name',
+    'field_type_naming',
+    'field_type_custom_name',
+    'field_type_has_custom_name',
     'field_is_dynamic',
     'field_is_object',
     'field_is_array',

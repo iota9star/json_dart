@@ -294,7 +294,7 @@ class Field {
       'field_without_symbol_key': withoutSymbolKey,
       'field_type': def.type.name,
       'field_type_name': def.name(symbols: symbols),
-      'field_type_naming':def.naming(symbols: symbols),
+      'field_type_naming': def.naming(symbols: symbols),
       'field_type_custom_name': def.customName,
       'field_type_has_custom_name':
           def.customName != null && def.customName!.isNotEmpty,
