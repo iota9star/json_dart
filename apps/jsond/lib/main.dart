@@ -410,7 +410,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
           ],
           onChanged: (v) {
             _inputTimer?.cancel();
-            _inputTimer = Timer(const Duration(seconds: 1), () {
+            _inputTimer = Timer(const Duration(milliseconds: 500), () {
               final def = _codeDef.value!;
               if (v.isEmpty) {
                 def.updateObjName(entry.key, label);
@@ -477,8 +477,10 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                           return;
                         }
                         _inputTimer?.cancel();
-                        _inputTimer =
-                            Timer(const Duration(seconds: 1), _tryNewCode);
+                        _inputTimer = Timer(
+                          const Duration(milliseconds: 500),
+                          _tryNewCode,
+                        );
                       },
                     ),
                   ),
