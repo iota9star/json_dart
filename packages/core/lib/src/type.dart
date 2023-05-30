@@ -14,11 +14,14 @@ abstract class JType<T extends RuleContext, R> {
 
   String get display => ctx.text;
 
+  late final path = ctx.getPath();
+
   FieldTypeDef typing({Map<String, String>? symbols});
 
   String deser({
     bool nullable = false,
     Map<String, String>? symbols,
+    required Map<ObjKey, Obj> context,
   });
 }
 
@@ -40,6 +43,7 @@ class StringType<R> extends ValueType<R> {
   String deser({
     bool nullable = false,
     Map<String, String>? symbols,
+    required Map<ObjKey, Obj> context,
   }) {
     return JType.ph;
   }
@@ -69,6 +73,7 @@ class NumberType<R> extends ValueType<R> {
   String deser({
     bool nullable = false,
     Map<String, String>? symbols,
+    required Map<ObjKey, Obj> context,
   }) {
     return JType.ph;
   }
@@ -91,6 +96,7 @@ class BooleanType<R> extends ValueType<R> {
   String deser({
     bool nullable = false,
     Map<String, String>? symbols,
+    required Map<ObjKey, Obj> context,
   }) {
     return JType.ph;
   }
@@ -113,6 +119,7 @@ class NullableType<R> extends ValueType<R> {
   String deser({
     bool nullable = false,
     Map<String, String>? symbols,
+    required Map<ObjKey, Obj> context,
   }) {
     return JType.ph;
   }
@@ -187,6 +194,7 @@ class ArrayType<R> extends JType<ArrayContext, R> {
   String deser({
     bool nullable = false,
     Map<String, String>? symbols,
+    required Map<ObjKey, Obj> context,
   }) {
     final obj = _getObj(symbols);
     final hasObj = obj != null;
@@ -195,13 +203,21 @@ class ArrayType<R> extends JType<ArrayContext, R> {
     if (hasObj || hasArray) {
       final String child;
       if (hasObj && hasArray) {
-        final objDeser = obj.deser().replaceAll(JType.ph, 'e');
-        final arrDeser = array.deser().replaceAll(JType.ph, 'e');
+        final objDeser = obj
+            .deser(symbols: symbols, context: context)
+            .replaceAll(JType.ph, 'e');
+        final arrDeser = array
+            .deser(symbols: symbols, context: context)
+            .replaceAll(JType.ph, 'e');
         child = 'e is Map ? $objDeser : e is List ? $arrDeser : ${JType.ph}';
       } else if (hasObj) {
-        child = obj.deser().replaceAll(JType.ph, 'e');
+        child = obj
+            .deser(symbols: symbols, context: context)
+            .replaceAll(JType.ph, 'e');
       } else if (hasArray) {
-        child = array.deser().replaceAll(JType.ph, 'e');
+        child = array
+            .deser(symbols: symbols, context: context)
+            .replaceAll(JType.ph, 'e');
       } else {
         throw StateError('Unreachable');
       }
@@ -245,17 +261,21 @@ class PairType<T extends JType<RuleContext, R>, R>
       identical(this, other) ||
       other is PairType &&
           runtimeType == other.runtimeType &&
-          value.deser() == other.value.deser();
+          const ListEquality().equals(value.path, other.value.path);
 
   @override
-  int get hashCode => value.deser().hashCode;
+  int get hashCode => const ListEquality().hash(value.path);
 
   @override
   late final String display = '"$key": ${value.display}';
 
   @override
-  String deser({bool nullable = false, Map<String, String>? symbols}) {
-    return value.deser(nullable: nullable, symbols: symbols);
+  String deser({
+    bool nullable = false,
+    Map<String, String>? symbols,
+    required Map<ObjKey, Obj> context,
+  }) {
+    return value.deser(nullable: nullable, symbols: symbols, context: context);
   }
 
   @override
@@ -269,13 +289,20 @@ class ObjectType<R> extends JType<ObjectContext, R> {
 
   final List<PairType<JType<RuleContext, R>, R>> pairs;
 
+  late final key = ObjKey(path);
+
   @override
-  String deser({bool nullable = false, Map<String, String>? symbols}) {
-    final type = typing(symbols: symbols);
+  String deser({
+    bool nullable = false,
+    Map<String, String>? symbols,
+    required Map<ObjKey, Obj> context,
+  }) {
+    final obj = context[key]!;
+    final naming = obj.key.naming(symbols: symbols);
     if (nullable) {
-      return '${JType.ph} == null ? null : ${type.naming(symbols: symbols)}.fromJson(${JType.ph} as Map<String, dynamic>,)';
+      return '${JType.ph} == null ? null : $naming.fromJson(${JType.ph} as Map<String, dynamic>,)';
     }
-    return '${type.naming(symbols: symbols)}.fromJson(${JType.ph} as Map<String, dynamic>,)';
+    return '$naming.fromJson(${JType.ph} as Map<String, dynamic>,)';
   }
 
   @override
@@ -291,7 +318,6 @@ class ObjectType<R> extends JType<ObjectContext, R> {
 
   @override
   FieldTypeDef typing({Map<String, String>? symbols}) {
-    final path = ctx.getPath();
     return FieldTypeDef(
       def: path.toPascalCase(symbols: symbols),
       path: path,

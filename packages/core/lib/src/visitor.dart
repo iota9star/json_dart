@@ -90,8 +90,7 @@ class JVisitor extends JSON5BaseVisitor<JType> {
       ctx,
       ctx.pairs().map((e) => visit(e)! as PairType).toList(growable: false),
     );
-    final objKey = ObjKey(ctx.getPath());
-    _samePathObjs.putIfAbsent(objKey, () => []).add(objectType);
+    _samePathObjs.putIfAbsent(objectType.key, () => []).add(objectType);
     return objectType;
   }
 
@@ -109,14 +108,14 @@ class JVisitor extends JSON5BaseVisitor<JType> {
       key: key,
       rawDef: nullable ? null : def,
       nullable: nullable,
-      types: {type},
+      types: {type.value},
     );
     if (obj._fields.contains(field)) {
       final exist = obj._fields.firstWhere((e) => e.key == key);
       exist.update(
         newDef: nullable ? null : def,
         nullable: nullable,
-        type: type,
+        type: type.value,
       );
     } else {
       obj._fields.add(field);
@@ -165,7 +164,10 @@ class Obj {
 
   Set<Field> get fields => Set.unmodifiable(_fields);
 
-  Map<String, dynamic> toJson({Map<String, String>? symbols}) {
+  Map<String, dynamic> toJson({
+    Map<String, String>? symbols,
+    required Map<ObjKey, Obj> context,
+  }) {
     return {
       'obj_path': key.path,
       'obj_name': key.name(symbols: symbols),
@@ -176,7 +178,7 @@ class Obj {
       'obj_fields_length': _fields.length,
       'obj_fields': _fields
           .mapIndexed(
-            (index, e) => e.toJson(symbols: symbols)
+            (index, e) => e.toJson(symbols: symbols, context: context)
               ..['field_index'] = index
               ..['field_is_first'] = index == 0
               ..['field_is_last'] = index == _fields.length - 1,
@@ -205,7 +207,7 @@ class Field {
   });
 
   final String key;
-  final Set<PairType> types;
+  final Set<JType> types;
   FieldTypeDef? rawDef;
   bool nullable;
 
@@ -219,7 +221,7 @@ class Field {
   void update({
     FieldTypeDef? newDef,
     bool? nullable,
-    PairType? type,
+    JType? type,
   }) {
     final curr = rawDef;
     if (newDef != null &&
@@ -251,33 +253,38 @@ class Field {
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
   int get hashCode => key.hashCode;
 
-  Map<String, dynamic> toJson({Map<String, String>? symbols}) {
+  Map<String, dynamic> toJson({
+    Map<String, String>? symbols,
+    required Map<ObjKey, Obj> context,
+  }) {
     final array = types.firstWhereOrNull(
       (e) {
-        final value = e.value;
-        if (value is! ArrayType) {
+        if (e is! ArrayType) {
           return false;
         }
-        return !value.isPrimitive(symbols);
+        return !e.isPrimitive(symbols);
       },
     );
-    final obj = types.firstWhereOrNull((e) => e.value is ObjectType);
+    final obj = types.firstWhereOrNull((e) => e is ObjectType) as ObjectType?;
     String? deser;
-    if (array != null || obj != null) {
-      if (array != null && obj != null) {
+    final hasArray = array != null;
+    final hasObj = obj != null;
+    if (hasArray || hasObj) {
+      if (hasArray && hasObj) {
         deser =
-            '${JType.ph} is Map ? ${obj.deser()} : ${JType.ph} is List ? ${array.deser()} : ${JType.ph}';
-      } else if (array != null) {
+            '${JType.ph} is Map ? ${obj.deser(symbols: symbols, context: context)} : ${JType.ph} is List ? ${array.deser(symbols: symbols, context: context)} : ${JType.ph}';
+      } else if (hasArray) {
         deser = nullable
-            ? '${JType.ph} is List ? ${array.deser()} : null'
-            : array.deser();
-      } else if (obj != null) {
+            ? '${JType.ph} is List ? ${array.deser(symbols: symbols, context: context)} : null'
+            : array.deser(symbols: symbols, context: context);
+      } else if (hasObj) {
         deser = nullable
-            ? '${JType.ph} is Map ? ${obj.deser()} : null'
-            : obj.deser();
+            ? '${JType.ph} is Map ? ${obj.deser(symbols: symbols, context: context)} : null'
+            : obj.deser(symbols: symbols, context: context);
       }
     }
     deser ??= JType.ph;
+    deser.$debug();
     String withoutSymbolKey;
     if (symbols != null) {
       withoutSymbolKey = key.replaceAllMapped(RegExp(r'^[^a-zA-Z\d]'), (match) {

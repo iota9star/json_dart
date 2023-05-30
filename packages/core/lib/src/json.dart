@@ -17,6 +17,8 @@ class JSONDef {
 
   late final objs = List<Obj>.unmodifiable(_objs);
 
+  late final context = Map.fromEntries(_objs.map((e) => MapEntry(e.key, e)));
+
   bool get isObject => type is ObjectType;
 
   bool get isArray => type is ArrayType;
@@ -70,7 +72,7 @@ class JSONDef {
   }) {
     return _objs
         .mapIndexed(
-          (index, e) => e.toJson(symbols: symbols)
+          (index, e) => e.toJson(symbols: symbols, context: context)
             ..['obj_index'] = index
             ..['obj_is_first'] = index == 0
             ..['obj_is_last'] = index == _objs.length - 1,
