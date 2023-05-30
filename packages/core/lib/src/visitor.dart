@@ -284,7 +284,6 @@ class Field {
       }
     }
     deser ??= JType.ph;
-    deser.$debug();
     String withoutSymbolKey;
     if (symbols != null) {
       withoutSymbolKey = key.replaceAllMapped(RegExp(r'^[^a-zA-Z\d]'), (match) {

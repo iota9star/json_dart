@@ -8,13 +8,16 @@ void main() {
   group('A group of tests', () {
     test('templates', () async {
       final dir = '${Directory.current.path}/test/';
-      final def = await JSONDef.fromPath('$dir/test.json');
+      final def = await JSONDef.fromPath('$dir/github.json');
       final objs = def.toJson(symbols: builtInSymbols);
       final tpls = [
-        const MapEntry('no_final', no_final),
-        const MapEntry('with_final', with_final),
-        const MapEntry('json_serializable', json_serializable),
+        const MapEntry('no_final', noFinal),
+        const MapEntry('with_final', withFinal),
+        const MapEntry('json_serializable', jsonSerializable),
         const MapEntry('freezed', freezed),
+        const MapEntry('isar', isar),
+        const MapEntry('isar_with_json_serializable', isarWithJsonSerializable),
+        const MapEntry('isar_with_freezed', isarWithFreezed),
       ];
       for (final tpl in tpls) {
         final rendered =

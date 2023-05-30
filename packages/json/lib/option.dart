@@ -35,13 +35,13 @@ class JsonOption {
       final tpl = useTemplate ?? 'with_final';
       switch (tpl) {
         case 'with_final':
-          template = with_final;
+          template = withFinal;
           break;
         case 'no_final':
-          template = no_final;
+          template = noFinal;
           break;
         case 'json_serializable':
-          template = json_serializable;
+          template = jsonSerializable;
           break;
         case 'freezed':
           template = freezed;

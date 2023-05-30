@@ -19,7 +19,7 @@ void main() {
   }
 }
   ''',
-    no_final,
+    noFinal,
     dartFormat: true,
   );
   '\n$code'.$debug();

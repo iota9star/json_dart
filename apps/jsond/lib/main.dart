@@ -147,21 +147,21 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
   final _builtInTemplates = [
     Template(
       name: 'With Final',
-      template: with_final,
+      template: withFinal,
       builtIn: true,
       dartFormat: true,
       id: -1,
     ),
     Template(
       name: 'No Final',
-      template: no_final,
+      template: noFinal,
       builtIn: true,
       dartFormat: true,
       id: -2,
     ),
     Template(
-      name: 'Json Serializable',
-      template: json_serializable,
+      name: 'JsonSerializable',
+      template: jsonSerializable,
       builtIn: true,
       dartFormat: true,
       id: -3,
@@ -172,6 +172,27 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       builtIn: true,
       dartFormat: true,
       id: -4,
+    ),
+    Template(
+      name: 'Isar',
+      template: isar,
+      builtIn: true,
+      dartFormat: true,
+      id: -5,
+    ),
+    Template(
+      name: 'Isar + JsonSerializable',
+      template: isarWithJsonSerializable,
+      builtIn: true,
+      dartFormat: true,
+      id: -6,
+    ),
+    Template(
+      name: 'Isar + Freezed',
+      template: isarWithFreezed,
+      builtIn: true,
+      dartFormat: true,
+      id: -7,
     ),
   ];
 
