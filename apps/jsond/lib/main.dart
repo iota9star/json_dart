@@ -659,6 +659,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                                     icon: Assets.github.image(width: 36.0),
                                   ),
                                 ),
+                                Text('👈', style: theme.textTheme.titleLarge),
                                 const Spacer(),
                                 IconButton(
                                   onPressed: () {
