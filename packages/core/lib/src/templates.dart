@@ -222,16 +222,23 @@ class {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} {
 
   {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}();
 
+    {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}.named({
+{{# obj_fields }}
+    {{^ field_nullable }}required {{/ field_nullable }}this.{{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }},
+{{/ obj_fields }}
+  });
+
   factory {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}.fromJson(Map json) {
 {{# obj_fields }}
 {{# field_is_complex }}
     final {{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }} = json['{{ field_key }}'];
 {{/ field_is_complex }}
 {{/ obj_fields }}
-    return {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}()
+    return {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}.named(
 {{# obj_fields }}
-      ..{{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}= {{# field_is_complex }}{{# @deser_field }}{{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}{{/ @deser_field }}{{/ field_is_complex }}{{^ field_is_complex }}json['{{ field_key }}']{{/ field_is_complex }}
-{{/ obj_fields }};
+      {{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}: {{# field_is_complex }}{{# @deser_field }}{{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}{{/ @deser_field }}{{/ field_is_complex }}{{^ field_is_complex }}json['{{ field_key }}']{{/ field_is_complex }},
+{{/ obj_fields }}
+      );
   }
 
   {{# obj_is_first }}Id $id = Isar.autoIncrement;{{/ obj_is_first }}
