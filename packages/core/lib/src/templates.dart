@@ -5,11 +5,11 @@ const noFinal =
 class {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} {
   {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}();
 
-    {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}.named({
+    {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}.named({{# obj_has_fields }}{ {{/ obj_has_fields }}
 {{# obj_fields }}
     {{^ field_nullable }}required {{/ field_nullable }}this.{{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }},
 {{/ obj_fields }}
-  });
+  {{# obj_has_fields }} }{{/ obj_has_fields }});
 
   factory {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}.fromJson(Map json) {
 {{# obj_fields }}
@@ -35,7 +35,7 @@ class {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} {
      {{/ obj_fields }}
     };
   }
-
+{{# obj_has_fields }}
   {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} copyWith({
 {{# obj_fields }}
     {{& field_type_naming }}{{^ field_is_dynamic }}?{{/ field_is_dynamic }} {{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }},
@@ -46,7 +46,6 @@ class {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} {
       ..{{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }} = {{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }} ?? this.{{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}
 {{/ obj_fields }};
   }
-
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -55,14 +54,13 @@ class {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} {
 {{# obj_fields }}
           {{# field_is_array }}const DeepCollectionEquality().equals({{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}, other.{{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}){{/ field_is_array }}{{^ field_is_array }}{{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }} == other.{{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}{{/ field_is_array }}{{^ field_is_last }} &&{{/ field_is_last }}
 {{/ obj_fields }};
-
   @override
   int get hashCode => Object.hashAll([
 {{# obj_fields }}
         {{# field_is_array }}const DeepCollectionEquality().hash({{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}){{/ field_is_array }}{{^ field_is_array }}{{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}{{/ field_is_array }},
 {{/ obj_fields }}
       ]);
-
+{{/ obj_has_fields }}
 }
 
 {{/ objs }}
@@ -73,11 +71,11 @@ const withFinal =
     '''
 {{# objs }}
 class {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} {
-  {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}({
+  {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}({{# obj_has_fields }}{ {{/ obj_has_fields }}
 {{# obj_fields }}
     {{^ field_nullable }}required {{/ field_nullable }}this.{{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }},
 {{/ obj_fields }}
-  });
+{{# obj_has_fields }}  }{{/ obj_has_fields }});
 
   factory {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}.fromJson(Map json) {
 {{# obj_fields }}
@@ -103,7 +101,7 @@ class {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} {
      {{/ obj_fields }}
     };
   }
-
+{{# obj_has_fields }}
   {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} copyWith({
 {{# obj_fields }}
     {{& field_type_naming }}{{^ field_is_dynamic }}?{{/ field_is_dynamic }} {{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }},
@@ -131,7 +129,7 @@ class {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} {
         {{# field_is_array }}const DeepCollectionEquality().hash({{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}){{/ field_is_array }}{{^ field_is_array }}{{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}{{/ field_is_array }},
 {{/ obj_fields }}
       ]);
-
+{{/ obj_has_fields }}
 }
 
 {{/ objs }}
@@ -143,11 +141,11 @@ const jsonSerializable =
 {{# objs }}
 @JsonSerializable()
 class {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} {
-  {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}({
+  {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}({{# obj_has_fields }}{ {{/ obj_has_fields }}
 {{# obj_fields }}
     {{^ field_nullable }}required {{/ field_nullable }}this.{{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }},
 {{/ obj_fields }}
-  });
+{{# obj_has_fields }}  }{{/ obj_has_fields }});
 
   factory {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}.fromJson(Map<String, dynamic> json) => _${{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}FromJson(json);
 
@@ -157,7 +155,7 @@ class {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} {
 {{/ obj_fields }}
 
   Map<String, dynamic> toJson() => _${{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}ToJson(this);
-
+{{# obj_has_fields }}
   {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} copyWith({
 {{# obj_fields }}
     {{& field_type_naming }}{{^ field_is_dynamic }}?{{/ field_is_dynamic }} {{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }},
@@ -185,7 +183,7 @@ class {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} {
         {{# field_is_array }}const DeepCollectionEquality().hash({{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}){{/ field_is_array }}{{^ field_is_array }}{{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}{{/ field_is_array }},
 {{/ obj_fields }}
       ]);
-
+{{/ obj_has_fields }}
 }
 
 {{/ objs }}
@@ -200,11 +198,11 @@ class {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} with _${{# @pascal_
 
   const {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}._();
 
-  const factory {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}({
+  const factory {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}({{# obj_has_fields }}{ {{/ obj_has_fields }}
 {{# obj_fields }}
   @JsonKey(name: '{{ field_key }}') {{^ field_nullable }}required {{/ field_nullable }}{{# field_is_dynamic }}dynamic {{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }},{{/ field_is_dynamic }}{{^ field_is_dynamic }}{{& field_type_naming }}{{# field_nullable }}?{{/ field_nullable }} {{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }},{{/ field_is_dynamic }}
 {{/ obj_fields }}
-  }) = _{{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }};
+{{# obj_has_fields }}  }{{/ obj_has_fields }}) = _{{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }};
 
   factory {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}.fromJson(Map<String, Object?> json)
       => _${{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}FromJson(json);
@@ -222,11 +220,11 @@ class {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} {
 
   {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}();
 
-    {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}.named({
+    {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}.named({{# obj_has_fields }}{ {{/ obj_has_fields }}
 {{# obj_fields }}
     {{^ field_nullable }}required {{/ field_nullable }}this.{{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }},
 {{/ obj_fields }}
-  });
+{{# obj_has_fields }}  }{{/ obj_has_fields }});
 
   factory {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}.fromJson(Map json) {
 {{# obj_fields }}
@@ -254,7 +252,7 @@ class {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} {
      {{/ obj_fields }}
     };
   }
-
+{{# obj_has_fields }}
   {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} copyWith({
 {{# obj_fields }}
     {{& field_type_naming }}{{^ field_is_dynamic }}?{{/ field_is_dynamic }} {{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }},
@@ -281,7 +279,7 @@ class {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} {
         {{# field_is_array }}const DeepCollectionEquality().hash({{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}){{/ field_is_array }}{{^ field_is_array }}{{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}{{/ field_is_array }},
 {{/ obj_fields }}
       ]);
-
+{{/ obj_has_fields }}
 }
 
 {{/ objs }}
@@ -297,11 +295,11 @@ class {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} {
 
   {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}();
 
-  {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}.withoutId({
+  {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}.withoutId({{# obj_has_fields }}{ {{/ obj_has_fields }}
 {{# obj_fields }}
     {{# obj_is_first }}{{^ field_nullable }}required {{/ field_nullable }}{{/ obj_is_first }}this.{{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }},
 {{/ obj_fields }}
-  });
+{{# obj_has_fields }}  }{{/ obj_has_fields }});
 
   factory {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}.fromJson(Map<String, dynamic> json) => _${{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}FromJson(json);
 
@@ -312,7 +310,7 @@ class {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} {
 {{/ obj_fields }}
 
   Map<String, dynamic> toJson() => _${{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}ToJson(this);
-
+{{# obj_has_fields }}
   {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} copyWith({
 {{# obj_fields }}
     {{& field_type_naming }}{{^ field_is_dynamic }}?{{/ field_is_dynamic }} {{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }},
@@ -340,7 +338,7 @@ class {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} {
         {{# field_is_array }}const DeepCollectionEquality().hash({{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}){{/ field_is_array }}{{^ field_is_array }}{{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}{{/ field_is_array }},
 {{/ obj_fields }}
       ]);
-
+{{/ obj_has_fields }}
 }
 
 {{/ objs }}
@@ -356,12 +354,12 @@ class {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} with _${{# @pascal_
 
   const {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}._();
 
-  const factory {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}({
+  const factory {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}({{# obj_has_fields }}{ {{/ obj_has_fields }}
   {{# obj_is_first }}@Default(Isar.autoIncrement) Id isarId,{{/ obj_is_first }}
 {{# obj_fields }}
   @JsonKey(name: '{{ field_key }}') {{# obj_is_first }}{{^ field_nullable }}required {{/ field_nullable }}{{/ obj_is_first }}{{# field_is_dynamic }}dynamic {{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }},{{/ field_is_dynamic }}{{^ field_is_dynamic }}{{& field_type_naming }}{{# obj_is_first }}{{# field_nullable }}?{{/ field_nullable }}{{/ obj_is_first }}{{^ obj_is_first }}?{{/ obj_is_first }} {{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }},{{/ field_is_dynamic }}
 {{/ obj_fields }}
-  }) = _{{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }};
+{{# obj_has_fields }}  }{{/ obj_has_fields }}) = _{{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }};
 
   factory {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}.fromJson(Map<String, Object?> json)
       => _${{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}FromJson(json);

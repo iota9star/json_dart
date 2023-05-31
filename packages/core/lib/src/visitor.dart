@@ -90,6 +90,9 @@ class JVisitor extends JSON5BaseVisitor<JType> {
       ctx,
       ctx.pairs().map((e) => visit(e)! as PairType).toList(growable: false),
     );
+    if(ctx.pairs().isEmpty){
+      _objs.putIfAbsent(objectType.key, () => Obj(objectType.key));
+    }
     _samePathObjs.putIfAbsent(objectType.key, () => []).add(objectType);
     return objectType;
   }
@@ -176,6 +179,7 @@ class Obj {
       'obj_has_custom_name':
           key.customName != null && key.customName!.isNotEmpty,
       'obj_fields_length': _fields.length,
+      'obj_has_fields': _fields.isNotEmpty,
       'obj_fields': _fields
           .mapIndexed(
             (index, e) => e.toJson(symbols: symbols, context: context)
