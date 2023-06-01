@@ -377,7 +377,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                   ),
                   sizeCurve: Curves.fastOutSlowIn,
                   secondChild: SizedBox(
-                    height: mediaQuery.size.height * 0.5,
+                    height: mediaQuery.size.height * 0.3,
                     child: _buildCustomNameFields(list),
                   ),
                   crossFadeState: value
@@ -407,7 +407,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
         vertical: 12.0,
       ),
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 200.0,
+        maxCrossAxisExtent: 300.0,
         mainAxisExtent: 42.0,
         crossAxisSpacing: 12.0,
         mainAxisSpacing: 12.0,
