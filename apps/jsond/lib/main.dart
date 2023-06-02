@@ -21,8 +21,9 @@ import 'package:url_launcher/url_launcher_string.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'consts.dart';
+import 'internal/helpers.dart';
 import 'internal/hive.dart';
-import 'notifiers.dart';
+import 'internal/notifiers.dart';
 import 'res/assets.gen.dart';
 import 'styles.dart';
 import 'widget/ripple_tap.dart';
@@ -125,7 +126,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
   void initState() {
     windowManager.addListener(this);
     super.initState();
-    _tryNewCode();
+    watchdog(_tryNewCode);
   }
 
   @override
@@ -431,33 +432,36 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
           ],
           onChanged: (v) {
             _inputTimer?.cancel();
-            _inputTimer = Timer(const Duration(milliseconds: 500), () {
-              final def = _codeDef.value!;
-              if (v.isEmpty) {
-                def.updateObjName(entry.key, label);
-              } else {
-                def.updateObjName(entry.key, v);
-              }
-              _objs.newValue(_objs.value);
-              try {
-                final tpl = _selected.value;
-                String code = renderObjs(
-                  tpl.template,
-                  def.toJson(symbols: builtInSymbols),
-                  keywords: builtInDartKeywords,
-                );
-                if (tpl.dartFormat) {
-                  code = DartFormatter(fixes: StyleFix.all).format(code);
+            _inputTimer = Timer(
+              const Duration(milliseconds: 500),
+              () => watchdog(() {
+                final def = _codeDef.value!;
+                if (v.isEmpty) {
+                  def.updateObjName(entry.key, label);
+                } else {
+                  def.updateObjName(entry.key, v);
                 }
-                _codes.value = code
-                    .split('\n')
-                    .slices(500)
-                    .map((e) => e.join('\n'))
-                    .toList(growable: false);
-              } catch (e, s) {
-                e.$error(stackTrace: s);
-              }
-            });
+                _objs.newValue(_objs.value);
+                try {
+                  final tpl = _selected.value;
+                  String code = renderObjs(
+                    tpl.template,
+                    def.toJson(symbols: builtInSymbols),
+                    keywords: builtInDartKeywords,
+                  );
+                  if (tpl.dartFormat) {
+                    code = DartFormatter(fixes: StyleFix.all).format(code);
+                  }
+                  _codes.value = code
+                      .split('\n')
+                      .slices(500)
+                      .map((e) => e.join('\n'))
+                      .toList(growable: false);
+                } catch (e, s) {
+                  e.$error(stackTrace: s);
+                }
+              }),
+            );
           },
         );
       },
@@ -500,7 +504,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                         _inputTimer?.cancel();
                         _inputTimer = Timer(
                           const Duration(milliseconds: 500),
-                          _tryNewCode,
+                          () => watchdog(_tryNewCode),
                         );
                       },
                     ),
@@ -531,7 +535,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                       onPressed: () {
                         final codes = _jsonController.text.trim();
                         _jsonController.text = codes.unicodeToRawString();
-                        _tryNewCode();
+                        watchdog(_tryNewCode);
                       },
                       icon: const Icon(
                         Icons.transform,
@@ -897,7 +901,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
         onTap: () {
           if (_selected.value != tpl) {
             _selected.value = tpl;
-            _tryNewCode();
+            watchdog(_tryNewCode);
           }
         },
       ),
@@ -1213,7 +1217,10 @@ class _TempEditorState extends State<TempEditor> {
     MapEntry('ObjName', '{{ obj_name }}'),
     MapEntry('ObjNaming', '{{ obj_naming }}'),
     MapEntry('ObjCustomName', '{{ obj_custom_name }}'),
-    MapEntry('ObjHasCustomName', '{{# obj_has_custom_name }}{{/ obj_has_custom_name }}'),
+    MapEntry(
+      'ObjHasCustomName',
+      '{{# obj_has_custom_name }}{{/ obj_has_custom_name }}',
+    ),
     MapEntry('ObjHasFields', '{{# obj_has_fields }}{{/ obj_has_fields }}'),
     MapEntry('ObjIndex', '{{ obj_index }}'),
     MapEntry('ObjIsFirst', '{{# obj_is_first }}{{/ obj_is_first }}'),
