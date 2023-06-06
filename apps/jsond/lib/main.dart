@@ -127,14 +127,32 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
     windowManager.addListener(this);
     super.initState();
     watchdog(_tryNewCode);
+    _restoreSavedSetting();
+    _selected.addListener(_onSelectedChange);
   }
 
   @override
   void dispose() {
+    _selected.removeListener(_onSelectedChange);
     windowManager.removeListener(this);
     _jsonController.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  void _onSelectedChange() {
+    final selected = _selected.value;
+    Hives.settingBox.put('selected_template_id', selected.id);
+  }
+
+  void _restoreSavedSetting() {
+    final box = Hives.settingBox;
+    final id = box.get('selected_template_id', defaultValue: -1);
+    final templates = _builtInTemplates + Hives.templateBox.values.toList();
+    final firstTemplate = templates.firstWhereOrNull((e) => e.id == id);
+    if (firstTemplate != null) {
+      _selected.value = firstTemplate;
+    }
   }
 
   @override
