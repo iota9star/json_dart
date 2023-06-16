@@ -222,9 +222,18 @@ class ArrayType<R> extends JType<ArrayContext, R> {
         throw StateError('Unreachable');
       }
       final ct = childType(symbols: symbols);
-      final mapType = ct.type == FieldType.dynamic
-          ? ''
-          : '<${ct.naming(symbols: symbols)}>';
+      String? gt;
+      if (ct.path != null) {
+        final obj = context[ObjKey(ct.path!)];
+        if (obj != null) {
+          gt = obj.key.naming(symbols: symbols);
+        }
+      }
+      final mapType = gt != null
+          ? '<$gt>'
+          : ct.type == FieldType.dynamic
+              ? ''
+              : '<${ct.naming(symbols: symbols)}>';
       if (nullable) {
         return '${JType.ph} is List ? ${JType.ph}.map$mapType((e) { return $child;}).toList() : null';
       }
