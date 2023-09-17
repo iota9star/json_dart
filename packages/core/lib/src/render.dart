@@ -44,9 +44,10 @@ String render(
   bool dartFormat = false,
 }) {
   final ret = JSONDef.fromString(json, symbols: symbols);
+  final value = ret.toJson(symbols: symbols);
   final code = renderObjs(
     template,
-    ret.toJson(symbols: symbols),
+    value,
     keywords: keywords,
   );
   if (dartFormat) {

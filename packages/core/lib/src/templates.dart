@@ -42,7 +42,7 @@ class {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} {
   }) {
     return {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}(
 {{# obj_fields }}
-      {{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}: {{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }} ?? this.{{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}
+      {{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }}: {{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }} ?? this.{{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }},
 {{/ obj_fields }});
   }
   @override
@@ -198,6 +198,28 @@ class {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} with _${{# @pascal_
   const factory {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}({{# obj_has_fields }}{ {{/ obj_has_fields }}
 {{# obj_fields }}
   @JsonKey(name: '{{ field_key }}') {{^ field_nullable }}required {{/ field_nullable }}{{# field_is_dynamic }}dynamic {{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }},{{/ field_is_dynamic }}{{^ field_is_dynamic }}{{& field_type_naming }}{{# field_nullable }}?{{/ field_nullable }} {{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }},{{/ field_is_dynamic }}
+{{/ obj_fields }}
+{{# obj_has_fields }}  }{{/ obj_has_fields }}) = _{{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }};
+
+  const {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}._();
+
+  factory {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}.fromJson(Map<String, Object?> json)
+      => _${{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}FromJson(json);
+}
+
+{{/ objs }}
+      ''';
+
+const freezedWithDefault =
+// language=handlebars
+    r'''
+{{# objs }}
+@freezed
+class {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} with _${{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }} {
+
+  const factory {{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }}({{# obj_has_fields }}{ {{/ obj_has_fields }}
+{{# obj_fields }}
+  {{^ field_is_dynamic }}@Default({{& field_default_value }}){{/ field_is_dynamic }} @JsonKey(name: '{{ field_key }}') {{# field_is_dynamic }}dynamic {{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }},{{/ field_is_dynamic }}{{^ field_is_dynamic }}{{& field_type_naming }} {{# @keywords }}{{# @camel_case }}{{ field_without_symbol_key }}{{/ @camel_case }}{{/ @keywords }},{{/ field_is_dynamic }}
 {{/ obj_fields }}
 {{# obj_has_fields }}  }{{/ obj_has_fields }}) = _{{# @pascal_case }}{{ obj_naming }}{{/ @pascal_case }};
 

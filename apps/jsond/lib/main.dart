@@ -213,6 +213,13 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       dartFormat: true,
       id: -7,
     ),
+    Template(
+      name: 'Freezed With Default',
+      template: freezedWithDefault,
+      builtIn: true,
+      dartFormat: true,
+      id: -8,
+    ),
   ];
 
   final _codes = ValueNotifier<List<String>>([]);
@@ -605,9 +612,11 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       _objs.newValue(newMap);
       _codeDef.value = def;
       final tpl = _selected.value;
+      final value = def.toJson(symbols: builtInSymbols);
+      value.$debug();
       String code = renderObjs(
         tpl.template,
-        def.toJson(symbols: builtInSymbols),
+        value,
         keywords: builtInDartKeywords,
       );
       if (tpl.dartFormat) {

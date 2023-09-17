@@ -90,7 +90,7 @@ class JVisitor extends JSON5BaseVisitor<JType> {
       ctx,
       ctx.pairs().map((e) => visit(e)! as PairType).toList(growable: false),
     );
-    if(ctx.pairs().isEmpty){
+    if (ctx.pairs().isEmpty) {
       _objs.putIfAbsent(objectType.key, () => Obj(objectType.key));
     }
     _samePathObjs.putIfAbsent(objectType.key, () => []).add(objectType);
@@ -180,14 +180,33 @@ class Obj {
           key.customName != null && key.customName!.isNotEmpty,
       'obj_fields_length': _fields.length,
       'obj_has_fields': _fields.isNotEmpty,
-      'obj_fields': _fields
-          .mapIndexed(
-            (index, e) => e.toJson(symbols: symbols, context: context)
-              ..['field_index'] = index
-              ..['field_is_first'] = index == 0
-              ..['field_is_last'] = index == _fields.length - 1,
-          )
-          .toList(growable: false),
+      'obj_fields': _fields.mapIndexed(
+        (index, e) {
+          final value = e.toJson(symbols: symbols, context: context)
+            ..['field_index'] = index
+            ..['field_is_first'] = index == 0
+            ..['field_is_last'] = index == _fields.length - 1;
+          final type = value['field_type_naming'] as String;
+          if (type == 'int') {
+            value['field_default_value'] = '0';
+          } else if (type == 'double') {
+            value['field_default_value'] = '0.0';
+          } else if (type == 'bool') {
+            value['field_default_value'] = 'false';
+          } else if (type == 'String') {
+            value['field_default_value'] = "''";
+          } else if (type.startsWith('List<')) {
+            value['field_default_value'] = '${type.substring(4)}[]';
+          } else if (type.startsWith('Map<')) {
+            value['field_default_value'] = '${type.substring(3)}{}';
+          } else if (type == 'dynamic') {
+            value['field_default_value'] = 'null';
+          } else {
+            value['field_default_value'] = '$type()';
+          }
+          return value;
+        },
+      ).toList(growable: false),
     };
   }
 
