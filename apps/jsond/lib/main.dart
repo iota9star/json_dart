@@ -30,7 +30,7 @@ import 'widget/ripple_tap.dart';
 
 part 'main.g.dart';
 
-MediaQueryData get mediaQuery => MediaQueryData.fromWindow(window);
+MediaQueryData get mediaQuery => MediaQueryData.fromView(window);
 
 Map<String, TextStyle> lightCodeTheme(Color backgroundColor) {
   final map = Map<String, TextStyle>.from(tomorrowTheme);
@@ -453,7 +453,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
           ),
           style: const TextStyle(fontSize: 14.0),
           inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\d_]'))
+            FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\d_]')),
           ],
           onChanged: (v) {
             _inputTimer?.cancel();
@@ -510,28 +510,44 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                       _focusNode.requestFocus();
                     }
                   },
-                  child: CodeTheme(
-                    data: CodeThemeData(
-                      styles: getCodeTheme(theme),
-                    ),
-                    child: CodeField(
-                      controller: _jsonController,
-                      focusNode: _focusNode,
-                      wrap: true,
-                      textStyle: codeTextStyle,
-                      onChanged: (v) {
-                        if (v.isEmpty) {
-                          _codeDef.value = null;
-                          _codes.value = [];
-                          _objs.value = {};
-                          return;
-                        }
-                        _inputTimer?.cancel();
-                        _inputTimer = Timer(
-                          const Duration(milliseconds: 500),
-                          () => watchdog(_tryNewCode),
-                        );
+                  child: Shortcuts(
+                    shortcuts: const {
+                      SingleActivator(LogicalKeyboardKey.keyS, control: true):
+                          FormatIntent(),
+                    },
+                    child: Actions(
+                      actions: {
+                        FormatIntent: CallbackAction(
+                          onInvoke: (intent) {
+                            final codes = _jsonController.text.trim();
+                            return _formatJsonContent(context, codes);
+                          },
+                        ),
                       },
+                      child: CodeTheme(
+                        data: CodeThemeData(
+                          styles: getCodeTheme(theme),
+                        ),
+                        child: CodeField(
+                          controller: _jsonController,
+                          focusNode: _focusNode,
+                          wrap: true,
+                          textStyle: codeTextStyle,
+                          onChanged: (v) {
+                            if (v.isEmpty) {
+                              _codeDef.value = null;
+                              _codes.value = [];
+                              _objs.value = {};
+                              return;
+                            }
+                            _inputTimer?.cancel();
+                            _inputTimer = Timer(
+                              const Duration(milliseconds: 500),
+                              () => watchdog(_tryNewCode),
+                            );
+                          },
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -817,7 +833,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
               ),
               label: const Text('New Template'),
             ),
-          )
+          ),
         ],
       ),
     );
@@ -921,7 +937,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                       },
                     ),
                 ],
-              )
+              ),
             ],
           ),
         ),
@@ -1117,7 +1133,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                     ),
                     SizedBox(
                       height: MediaQuery.of(context).padding.bottom + 24.0,
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -1651,7 +1667,7 @@ class _TempEditorState extends State<TempEditor> {
                             },
                           );
                         },
-                      )
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12.0),
